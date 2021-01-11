@@ -94,8 +94,7 @@ def start_screen():
                 terminate()
             elif event1.type == pygame.KEYDOWN or \
                     event1.type == pygame.MOUSEBUTTONDOWN:
-                first_scene()
-                return
+                return first_scene()
         pygame.display.flip()
         clock.tick(FPS)
 
@@ -186,12 +185,44 @@ def first_scene():
         pygame.display.flip()
         for q in range(2):
             clock.tick(1)
+    screen.fill((0, 0, 0))
+    pygame.draw.rect(screen, (255, 255, 255), (160, 160, 960, 160), 1)
+    font = pygame.font.Font(None, 80)
+    string_rendered = font.render('Введите имя:', True, pygame.Color('white'))
+    intro_rect = string_rendered.get_rect()
+    intro_rect.top = 40
+    intro_rect.x = 160
+    screen.blit(string_rendered, intro_rect)
+    name = ''
+    inputt = True
+    font = pygame.font.Font(None, 200)
+    while inputt:
+        pygame.draw.rect(screen, (0, 0, 0), (160, 160, 960, 160))
+        pygame.draw.rect(screen, (255, 255, 255), (160, 160, 960, 160), 1)
+        for e in pygame.event.get():
+            if e.type == pygame.QUIT:
+                terminate()
+            if e.type == pygame.KEYDOWN:
+                if e.key == pygame.K_ESCAPE:
+                    terminate()
+                if e.key == 13:
+                    inputt = False
+                if e.key == pygame.K_BACKSPACE:
+                    name = name[:-1]
+                if len(name) < 6 and e.unicode in 'ёйцукенгшщзхъфывапролджэячсмитьбюЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ':
+                    name += e.unicode
+        string_rendered = font.render(name, True, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.top = 165
+        intro_rect.x = 165
+        screen.blit(string_rendered, intro_rect)
+        pygame.display.flip()
+    return name
 
 
 # print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
 # a = input()
 a = '1'
-print(Player)
 pygame.init()
 if a == '1':
     size = WIDTH, HEIGHT = 1280, 720
@@ -229,7 +260,7 @@ cur_level = load_level('PrisonRoomMap.txt')
 player, level_x, level_y, door = generate_level(cur_level, 'PrisonCorridorMap.txt')
 can = '.@'
 talk = True
-start_screen()
+NAME = start_screen()
 screen.fill((0, 0, 0))
 tiles_group.draw(screen)
 door_group.draw(screen)
@@ -270,7 +301,7 @@ while True:
                         if i.x == player.pos_x and i.y == player.pos_y - 1:
                             new_level(door[0].place)
     if talk:
-        dialog(['fefeeefef', 'feefefe'])
+        dialog([NAME + ' значит...'])
     else:
         player_group.update()
         tiles_group.draw(screen)
