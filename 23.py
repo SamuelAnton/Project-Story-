@@ -40,11 +40,14 @@ class Door(pygame.sprite.Sprite):
 
 
 class Use(pygame.sprite.Sprite):
-    def __init__(self, tile_type, pos_x, pos_y):
+    def __init__(self, tile_type, pos_x, pos_y, text):
         super().__init__(use_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
+        self.x = pos_x
+        self.y = pos_y
+        self.text = text
 
 
 def load_image(name, colorkey=None):
@@ -116,6 +119,7 @@ def generate_level(level, *a):
     new_player, x, y = None, None, None
     i = 0
     doors = []
+    use = []
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -134,7 +138,9 @@ def generate_level(level, *a):
                 Tile('cornerrwall', x, y)
             elif level[y][x] == '7':
                 Tile('frontwall', x, y)
-                Use('mirror', x, y)
+                use.append(Use('mirror', x, y,
+                               ['Ты посмотрел на отражение в зеркале...',
+                                'Отражение посмотрело на тебя...', 'Неловко...']))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
@@ -143,25 +149,26 @@ def generate_level(level, *a):
                 Tile('empty', x, y)
                 i += 1
             elif level[y][x] == '=':
-                Use('bed', x, y)
+                use.append(Use('bed', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
             elif level[y][x] == '-':
                 Tile('empty', x, y)
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y, doors
+    return new_player, x, y, doors, use
 
 
 def new_level(lv):
-    screen.fill((0, 0, 0))
-    all_sprites.empty()
-    tiles_group.empty()
-    player_group.empty()
-    use_group.empty()
-    door_group.empty()
-    global cur_level, player, level_x, level_y, door
-    cur_level = load_level(lv)
-    player, level_x, level_y, door = generate_level(cur_level, '', '', '', 'PrisonRoomMap.txt', '')
-    all_sprites.draw(screen)
-    door_group.draw(screen)
+    if lv != '':
+        screen.fill((0, 0, 0))
+        all_sprites.empty()
+        tiles_group.empty()
+        player_group.empty()
+        use_group.empty()
+        door_group.empty()
+        global cur_level, player, level_x, level_y, door
+        cur_level = load_level(lv)
+        player, level_x, level_y, door, use = generate_level(cur_level, *doors[lv])
+        all_sprites.draw(screen)
+        door_group.draw(screen)
 
 
 def dialog(text):
@@ -249,7 +256,11 @@ tile_images = {
     'mirror': load_image('Mirror.png', -1),
     'bed': load_image('PrisonBed.png', -1)
 }
-
+doors = {
+    'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
+    'PrisonCorridorMap.txt': ['', '', 'PrisonHallMap.txt', 'PrisonRoomMap.txt', ''],
+    'PrisonHallMap.txt': ['PrisonCorridorMap.txt', '']
+}
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -257,9 +268,10 @@ player_group = pygame.sprite.Group()
 door_group = pygame.sprite.Group()
 use_group = pygame.sprite.Group()
 cur_level = load_level('PrisonRoomMap.txt')
-player, level_x, level_y, door = generate_level(cur_level, 'PrisonCorridorMap.txt')
+player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorridorMap.txt')
 can = '.@'
 talk = True
+t = True
 NAME = start_screen()
 screen.fill((0, 0, 0))
 tiles_group.draw(screen)
@@ -296,13 +308,38 @@ while True:
                 if talk:
                     talk = not talk
                     screen.fill((0, 0, 0))
-                else:
+                elif player.image == player.imageb:
                     for i in door:
                         if i.x == player.pos_x and i.y == player.pos_y - 1:
-                            new_level(door[0].place)
-    if talk:
+                            new_level(i.place)
+                    for y in useful:
+                        if y.x == player.pos_x and y.y == player.pos_y - 1:
+                            dialog(y.text)
+                elif player.image == player.imagef:
+                    for i in door:
+                        if i.x == player.pos_x and i.y == player.pos_y + 1:
+                            new_level(i.place)
+                    for y in useful:
+                        if y.x == player.pos_x and y.y == player.pos_y + 1:
+                            dialog(y.text)
+                elif player.image == player.imagel:
+                    for i in door:
+                        if i.x == player.pos_x - 1 and i.y == player.pos_y:
+                            new_level(i.place)
+                    for y in useful:
+                        if y.x == player.pos_x - 1 and y.y == player.pos_y:
+                            dialog(y.text)
+                elif player.image == player.imager:
+                    for i in door:
+                        if i.x == player.pos_x + 1 and i.y == player.pos_y:
+                            new_level(i.place)
+                    for y in useful:
+                        if y.x == player.pos_x + 1 and y.y == player.pos_y:
+                            dialog(y.text)
+    if t:
         dialog([NAME + ' значит...'])
-    else:
+        t = False
+    elif not talk:
         player_group.update()
         tiles_group.draw(screen)
         door_group.draw(screen)
