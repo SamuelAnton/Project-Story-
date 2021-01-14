@@ -115,10 +115,10 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
-def generate_level(level, *a):
+def generate_level(level, *aa):
     new_player, x, y = None, None, None
-    i = 0
-    doors = []
+    ii = 0
+    doorss = []
     use = []
     for y in range(len(level)):
         for x in range(len(level[y])):
@@ -145,15 +145,15 @@ def generate_level(level, *a):
                 Tile('empty', x, y)
                 new_player = Player(x, y)
             elif level[y][x] == '$':
-                doors.append(Door('door', x, y, a[i]))
+                doorss.append(Door('door', x, y, aa[ii]))
                 Tile('empty', x, y)
-                i += 1
+                ii += 1
             elif level[y][x] == '=':
                 use.append(Use('bed', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
             elif level[y][x] == '-':
                 Tile('empty', x, y)
     # вернем игрока, а также размер поля в клетках
-    return new_player, x, y, doors, use
+    return new_player, x, y, doorss, use
 
 
 def new_level(lv):
@@ -164,11 +164,17 @@ def new_level(lv):
         player_group.empty()
         use_group.empty()
         door_group.empty()
-        global cur_level, player, level_x, level_y, door
+        global cur_level, player, level_x, level_y, door, lvl
         cur_level = load_level(lv)
         player, level_x, level_y, door, use = generate_level(cur_level, *doors[lv])
+        if lvl == 'PrisonCorridorMap.txt' and lv == 'PrisonRoomMap.txt':
+            player.pos_x += 2
+        elif lvl == 'PrisonHallMap.txt' and lv == 'PrisonCorridorMap.txt':
+            player.pos_x += 7
+            player.pos_y -= 1
         all_sprites.draw(screen)
         door_group.draw(screen)
+        lvl = lv
 
 
 def dialog(text):
@@ -177,17 +183,17 @@ def dialog(text):
     pygame.draw.rect(screen, (255, 255, 255), ((80, 440), (1120, 240)))
     pygame.draw.rect(screen, (0, 0, 0), ((85, 445), (1110, 230)))
     font = pygame.font.Font(None, 50)
-    for i in range(len(text)):
-        string_rendered = font.render(text[i], True, pygame.Color('white'))
+    for iii in range(len(text)):
+        string_rendered = font.render(text[iii], True, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
-        intro_rect.top = 450 + i * 60
+        intro_rect.top = 450 + iii * 60
         intro_rect.x = 100
         screen.blit(string_rendered, intro_rect)
 
 
 def first_scene():
-    for y in range(1, 7):
-        tic = pygame.transform.scale(load_image(str(y) + '.jpg'), (WIDTH, HEIGHT))
+    for yy in range(1, 7):
+        tic = pygame.transform.scale(load_image(str(yy) + '.jpg'), (WIDTH, HEIGHT))
         screen.blit(tic, (0, 0))
         pygame.display.flip()
         for q in range(2):
@@ -268,6 +274,7 @@ player_group = pygame.sprite.Group()
 door_group = pygame.sprite.Group()
 use_group = pygame.sprite.Group()
 cur_level = load_level('PrisonRoomMap.txt')
+lvl = 'PrisonRoomMap.txt'
 player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorridorMap.txt')
 can = '.@'
 talk = True
