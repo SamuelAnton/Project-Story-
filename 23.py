@@ -152,6 +152,9 @@ def generate_level(level, *aa):
                 use.append(Use('bed', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
             elif level[y][x] == '-':
                 Tile('empty', x, y)
+            elif level[y][x] == 's':
+                Tile('empty', x, y)
+                use.append(Use('prisoner1', x, y, ['* И что ты смотришь?']))
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, doorss, use
 
@@ -164,9 +167,9 @@ def new_level(lv):
         player_group.empty()
         use_group.empty()
         door_group.empty()
-        global cur_level, player, level_x, level_y, door, lvl
+        global cur_level, player, level_x, level_y, door, lvl, useful
         cur_level = load_level(lv)
-        player, level_x, level_y, door, use = generate_level(cur_level, *doors[lv])
+        player, level_x, level_y, door, useful = generate_level(cur_level, *doors[lv])
         if lvl == 'PrisonCorridorMap.txt' and lv == 'PrisonRoomMap.txt':
             player.pos_x += 2
         elif lvl == 'PrisonHallMap.txt' and lv == 'PrisonCorridorMap.txt':
@@ -260,7 +263,8 @@ tile_images = {
     'cornerlwall': load_image('PrisonWallCornerL.png', -1),
     'cornerrwall': load_image('PrisonWallCornerR.png', -1),
     'mirror': load_image('Mirror.png', -1),
-    'bed': load_image('PrisonBed.png', -1)
+    'bed': load_image('PrisonBed.png', -1),
+    'prisoner1': load_image('PrisonerFront1.png', -1)
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
