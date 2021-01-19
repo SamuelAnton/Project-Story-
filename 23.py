@@ -155,6 +155,9 @@ def generate_level(level, *aa):
             elif level[y][x] == 's':
                 Tile('empty', x, y)
                 use.append(Use('prisoner1', x, y, ['* И что ты смотришь?']))
+            elif level[y][x] == 'd':
+                Tile('empty', x, y)
+                use.append(Use('prisondin', x, y, ['* Не подходи ко мне приступное отребье']))
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, doorss, use
 
@@ -264,7 +267,8 @@ tile_images = {
     'cornerrwall': load_image('PrisonWallCornerR.png', -1),
     'mirror': load_image('Mirror.png', -1),
     'bed': load_image('PrisonBed.png', -1),
-    'prisoner1': load_image('PrisonerFront1.png', -1)
+    'prisoner1': load_image('PrisonerFront1.png', -1),
+    'prisondin': load_image('DinOfficerFront.png', -1)
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
