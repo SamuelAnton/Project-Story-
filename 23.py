@@ -14,10 +14,10 @@ class Tile(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
-        self.imagef = load_image('HeroFront.png', -1)
-        self.imageb = load_image('HeroBack.png', -1)
-        self.imager = load_image('HeroRight.png', -1)
-        self.imagel = load_image('HeroLeft.png', -1)
+        self.imagef = pygame.transform.scale(load_image('HeroFront.png', -1), (tile_width, tile_height))
+        self.imageb = pygame.transform.scale(load_image('HeroBack.png', -1), (tile_width, tile_height))
+        self.imager = pygame.transform.scale(load_image('HeroRight.png', -1), (tile_width, tile_height))
+        self.imagel = pygame.transform.scale(load_image('HeroLeft.png', -1), (tile_width, tile_height))
         self.image = self.imagef
         self.pos_x, self.pos_y = pos_x, pos_y
         self.rect = self.image.get_rect().move(
@@ -120,6 +120,7 @@ def generate_level(level, *aa):
     ii = 0
     doorss = []
     use = []
+    global under
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -142,7 +143,7 @@ def generate_level(level, *aa):
                                ['Ты посмотрел на отражение в зеркале...',
                                 'Отражение посмотрело на тебя...', 'Неловко...']))
             elif level[y][x] == '@':
-                Tile('empty', x, y)
+                Tile(under, x, y)
                 new_player = Player(x, y)
             elif level[y][x] == '$':
                 doorss.append(Door('door', x, y, aa[ii]))
@@ -161,12 +162,20 @@ def generate_level(level, *aa):
             elif level[y][x] == 'a':
                 Tile('empty', x, y)
                 use.append(Use('prisoner2', x, y, ['* Надзиратель Дин как всегда не в духе...']))
+            elif level[y][x] == '#':
+                Tile('road', x, y)
+            elif level[y][x] == '*':
+                Tile('roadmid', x, y)
+            elif level[y][x] == ',':
+                Tile('ground', x, y)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, doorss, use
 
 
 def new_level(lv):
-    if lv != '':
+    if lv == 'endofpart1':
+        part2()
+    elif lv != '':
         screen.fill((0, 0, 0))
         all_sprites.empty()
         tiles_group.empty()
@@ -189,14 +198,15 @@ def new_level(lv):
 def dialog(text):
     global talk
     talk = True
-    pygame.draw.rect(screen, (255, 255, 255), ((80, 440), (1120, 240)))
-    pygame.draw.rect(screen, (0, 0, 0), ((85, 445), (1110, 230)))
-    font = pygame.font.Font(None, 50)
+    pygame.draw.rect(screen, (255, 255, 255), ((tile_width, 5.5 * tile_height), (14 * tile_width, 3 * tile_height)))
+    pygame.draw.rect(screen, (0, 0, 0), ((tile_width * 1.0625, tile_height * 5.5625),
+                                         (tile_width * 13.875, 2.875 * tile_height)))
+    font = pygame.font.Font(None, int(0.625 * tile_width))
     for iii in range(len(text)):
         string_rendered = font.render(text[iii], True, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
-        intro_rect.top = 450 + iii * 60
-        intro_rect.x = 100
+        intro_rect.top = 5.625 * tile_width + iii * 0.75 * tile_height
+        intro_rect.x = 1.25 * tile_width
         screen.blit(string_rendered, intro_rect)
 
 
@@ -206,21 +216,21 @@ def first_scene():
         screen.blit(tic, (0, 0))
         pygame.display.flip()
         for q in range(2):
-            clock.tick(1)
+            clock.tick(2)
     screen.fill((0, 0, 0))
-    pygame.draw.rect(screen, (255, 255, 255), (160, 160, 960, 160), 1)
-    font = pygame.font.Font(None, 80)
+    pygame.draw.rect(screen, (255, 255, 255), (2 * tile_width, 2 * tile_height, 12 * tile_width, 2 * tile_height), 1)
+    font = pygame.font.Font(None, tile_height)
     string_rendered = font.render('Введите имя:', True, pygame.Color('white'))
     intro_rect = string_rendered.get_rect()
-    intro_rect.top = 40
-    intro_rect.x = 160
+    intro_rect.top = 0.5 * tile_height
+    intro_rect.x = 2 * tile_width
     screen.blit(string_rendered, intro_rect)
     name = ''
     inputt = True
-    font = pygame.font.Font(None, 200)
+    font = pygame.font.Font(None, int(2.5 * tile_width))
     while inputt:
-        pygame.draw.rect(screen, (0, 0, 0), (160, 160, 960, 160))
-        pygame.draw.rect(screen, (255, 255, 255), (160, 160, 960, 160), 1)
+        pygame.draw.rect(screen, (0, 0, 0), (2 * tile_width, 2 * tile_width, 12 * tile_width, 2 * tile_width))
+        pygame.draw.rect(screen, (255, 255, 255), (2 * tile_width, 2 * tile_width, 12 * tile_width, 2 * tile_width), 1)
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 terminate()
@@ -235,16 +245,23 @@ def first_scene():
                     name += e.unicode
         string_rendered = font.render(name, True, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
-        intro_rect.top = 165
-        intro_rect.x = 165
+        intro_rect.top = 2.0625 * tile_width
+        intro_rect.x = 2.0625 * tile_width
         screen.blit(string_rendered, intro_rect)
         pygame.display.flip()
     return name
 
 
-# print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
-# a = input()
-a = '1'
+def part2():
+    global under
+    under = 'ground'
+    prison_theme.stop()
+    new_level('AroundPrison.txt')
+
+
+print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
+a = input()
+under = 'empty'
 pygame.init()
 if a == '1':
     size = WIDTH, HEIGHT = 1280, 720
@@ -260,24 +277,28 @@ clock = pygame.time.Clock()
 FPS = 50
 
 tile_images = {
-    'frontwall': load_image('PrisonWallFront.png'),
-    'empty': load_image('PrisonGround.png'),
-    'door': load_image('PrisonDoor.png', -1),
-    'leftwall': load_image('PrisonWallLeft.png', -1),
-    'rightwall': load_image('PrisonWallRight.png', -1),
-    'backwall': load_image('PrisonWallBack.png', -1),
-    'cornerlwall': load_image('PrisonWallCornerL.png', -1),
-    'cornerrwall': load_image('PrisonWallCornerR.png', -1),
-    'mirror': load_image('Mirror.png', -1),
-    'bed': load_image('PrisonBed.png', -1),
-    'prisoner1': load_image('PrisonerFront1.png', -1),
-    'prisondin': load_image('DinOfficerFront.png', -1),
-    'prisoner2': load_image('PrisonerFront2.png', -1)
+    'frontwall': pygame.transform.scale(load_image('PrisonWallFront.png'), (tile_width, tile_height)),
+    'empty': pygame.transform.scale(load_image('PrisonGround.png'), (tile_width, tile_height)),
+    'door': pygame.transform.scale(load_image('PrisonDoor.png', -1), (tile_width, tile_height)),
+    'leftwall': pygame.transform.scale(load_image('PrisonWallLeft.png', -1), (tile_width, tile_height)),
+    'rightwall': pygame.transform.scale(load_image('PrisonWallRight.png', -1), (tile_width, tile_height)),
+    'backwall': pygame.transform.scale(load_image('PrisonWallBack.png', -1), (tile_width, tile_height)),
+    'cornerlwall': pygame.transform.scale(load_image('PrisonWallCornerL.png', -1), (tile_width, tile_height)),
+    'cornerrwall': pygame.transform.scale(load_image('PrisonWallCornerR.png', -1), (tile_width, tile_height)),
+    'mirror': pygame.transform.scale(load_image('Mirror.png', -1), (tile_width, tile_height * 2)),
+    'bed': pygame.transform.scale(load_image('PrisonBed.png', -1), (tile_width * 2, tile_height)),
+    'prisoner1': pygame.transform.scale(load_image('PrisonerFront1.png', -1), (tile_width, tile_height)),
+    'prisondin': pygame.transform.scale(load_image('DinOfficerFront.png', -1), (tile_width, tile_height)),
+    'prisoner2': pygame.transform.scale(load_image('PrisonerFront2.png', -1), (tile_width, tile_height)),
+    'ground': pygame.transform.scale(load_image('Ground.png'), (tile_width, tile_height)),
+    'road': pygame.transform.scale(load_image('Road.png'), (tile_width, tile_height)),
+    'roadmid': pygame.transform.scale(load_image('RoadMid.png'), (tile_width, tile_height))
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
     'PrisonCorridorMap.txt': ['', '', 'PrisonHallMap.txt', 'PrisonRoomMap.txt', ''],
-    'PrisonHallMap.txt': ['PrisonCorridorMap.txt', '']
+    'PrisonHallMap.txt': ['PrisonCorridorMap.txt', 'endofpart1'],
+    'AroundPrison.txt': []
 }
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -288,15 +309,18 @@ use_group = pygame.sprite.Group()
 cur_level = load_level('PrisonRoomMap.txt')
 lvl = 'PrisonRoomMap.txt'
 player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorridorMap.txt')
-can = '.@'
+can = '.@,#*'
 talk = True
 t = True
+prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
+prison_theme.set_volume(0.2)
 NAME = start_screen()
 screen.fill((0, 0, 0))
 tiles_group.draw(screen)
 door_group.draw(screen)
 use_group.draw(screen)
 player_group.draw(screen)
+prison_theme.play(loops=-1)
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
