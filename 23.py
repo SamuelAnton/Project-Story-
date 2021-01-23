@@ -168,6 +168,9 @@ def generate_level(level, *aa):
                 Tile('roadmid', x, y)
             elif level[y][x] == ',':
                 Tile('ground', x, y)
+            elif level[y][x] == '+':
+                Tile('ground', x, y)
+                Tile('rock', x, y)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, doorss, use
 
@@ -292,7 +295,8 @@ tile_images = {
     'prisoner2': pygame.transform.scale(load_image('PrisonerFront2.png', -1), (tile_width, tile_height)),
     'ground': pygame.transform.scale(load_image('Ground.png'), (tile_width, tile_height)),
     'road': pygame.transform.scale(load_image('Road.png'), (tile_width, tile_height)),
-    'roadmid': pygame.transform.scale(load_image('RoadMid.png'), (tile_width, tile_height))
+    'roadmid': pygame.transform.scale(load_image('RoadMid.png'), (tile_width, tile_height)),
+    'rock': pygame.transform.scale(load_image('rock.png', -1), (tile_width, tile_height))
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
