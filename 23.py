@@ -214,12 +214,36 @@ def dialog(text):
 
 
 def first_scene():
-    for yy in range(1, 7):
-        tic = pygame.transform.scale(load_image(str(yy) + '.jpg'), (WIDTH, HEIGHT))
+    time = 0
+    screen.fill((0, 0, 0))
+    pygame.display.flip()
+    scene = True
+    while scene:
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                terminate()
+            if ev.type == pygame.KEYDOWN:
+                if ev.key == pygame.K_ESCAPE:
+                    terminate()
+                if ev.key == 13:
+                    scene = False
+        if time > 17:
+            break
+        if time > 13.6:
+            tic = pygame.transform.scale(load_image('6.jpg'), (WIDTH, HEIGHT))
+        elif time > 11.2:
+            tic = pygame.transform.scale(load_image('5.jpg'), (WIDTH, HEIGHT))
+        elif time > 8.8:
+            tic = pygame.transform.scale(load_image('4.jpg'), (WIDTH, HEIGHT))
+        elif time > 6.6:
+            tic = pygame.transform.scale(load_image('3.jpg'), (WIDTH, HEIGHT))
+        elif time > 4.2:
+            tic = pygame.transform.scale(load_image('2.jpg'), (WIDTH, HEIGHT))
+        else:
+            tic = pygame.transform.scale(load_image('1.jpg'), (WIDTH, HEIGHT))
         screen.blit(tic, (0, 0))
         pygame.display.flip()
-        for q in range(2):
-            clock.tick(2)
+        time += clock.tick() / 1000
     screen.fill((0, 0, 0))
     pygame.draw.rect(screen, (255, 255, 255), (2 * tile_width, 2 * tile_height, 12 * tile_width, 2 * tile_height), 1)
     font = pygame.font.Font(None, tile_height)
@@ -316,7 +340,7 @@ player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorrid
 can = '.@,#*'
 talk = True
 t = True
-prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
+prison_theme = pygame.mixer.Sound(file='prison_theme.wav')
 prison_theme.set_volume(0.2)
 NAME = start_screen()
 screen.fill((0, 0, 0))
