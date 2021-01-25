@@ -286,6 +286,19 @@ def part2():
     new_level('AroundPrison.txt')
 
 
+def fight1():
+    screen.fill((0, 0, 0))
+    dialog(['Перед вами грозный противник.', 'Ваше стремление помочь улетучивается, но уже поздно', 'отступать'])
+    btns = [pygame.color.Color('green'), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        pygame.draw.rect(screen, btns[0], ((tile_width, 0.5 * tile_height),
+                                           (5 * tile_width, 2 * tile_height)), int(1 / 16 * tile_height))
+        pygame.display.flip()
+
+
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
 a = input()
 under = 'empty'
@@ -300,6 +313,7 @@ else:
     size = WIDTH, HEIGHT = 2560, 1440
     tile_width = tile_height = 160
 screen = pygame.display.set_mode(size)
+fight1()
 clock = pygame.time.Clock()
 FPS = 50
 
