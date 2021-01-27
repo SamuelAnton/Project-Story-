@@ -73,6 +73,7 @@ def terminate():
 
 
 def start_screen():
+    fon_theme.play(loops=-1)
     intro_text = ["ЗАСТАВКА", "",
                   "Правила игры",
                   "Если в правилах несколько строк,",
@@ -97,6 +98,7 @@ def start_screen():
                 terminate()
             elif event1.type == pygame.KEYDOWN or \
                     event1.type == pygame.MOUSEBUTTONDOWN:
+                fon_theme.stop()
                 return first_scene()
         pygame.display.flip()
         clock.tick(FPS)
@@ -214,12 +216,38 @@ def dialog(text):
 
 
 def first_scene():
-    for yy in range(1, 7):
-        tic = pygame.transform.scale(load_image(str(yy) + '.jpg'), (WIDTH, HEIGHT))
+    time = 0
+    screen.fill((0, 0, 0))
+    pygame.display.flip()
+    scene = True
+    scene1_theme.play()
+    while scene:
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                terminate()
+            if ev.type == pygame.KEYDOWN:
+                if ev.key == pygame.K_ESCAPE:
+                    terminate()
+                if ev.key == 13:
+                    scene = False
+        if time > 17:
+            break
+        if time > 13.6:
+            tic = pygame.transform.scale(load_image('6.jpg'), (WIDTH, HEIGHT))
+        elif time > 11.2:
+            tic = pygame.transform.scale(load_image('5.jpg'), (WIDTH, HEIGHT))
+        elif time > 8.8:
+            tic = pygame.transform.scale(load_image('4.jpg'), (WIDTH, HEIGHT))
+        elif time > 6.6:
+            tic = pygame.transform.scale(load_image('3.jpg'), (WIDTH, HEIGHT))
+        elif time > 4.2:
+            tic = pygame.transform.scale(load_image('2.jpg'), (WIDTH, HEIGHT))
+        else:
+            tic = pygame.transform.scale(load_image('1.jpg'), (WIDTH, HEIGHT))
         screen.blit(tic, (0, 0))
         pygame.display.flip()
-        for q in range(2):
-            clock.tick(2)
+        time += clock.tick() / 1000
+    scene1_theme.stop()
     screen.fill((0, 0, 0))
     pygame.draw.rect(screen, (255, 255, 255), (2 * tile_width, 2 * tile_height, 12 * tile_width, 2 * tile_height), 1)
     font = pygame.font.Font(None, tile_height)
@@ -262,6 +290,19 @@ def part2():
     new_level('AroundPrison.txt')
 
 
+def fight1():
+    screen.fill((0, 0, 0))
+    dialog(['Перед вами грозный противник.', 'Ваше стремление помочь улетучивается, но уже поздно', 'отступать'])
+    btns = [pygame.color.Color('green'), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+        pygame.draw.rect(screen, btns[0], ((tile_width, 0.5 * tile_height),
+                                           (5 * tile_width, 2 * tile_height)), int(1 / 16 * tile_height))
+        pygame.display.flip()
+
+
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
 a = input()
 under = 'empty'
@@ -276,6 +317,7 @@ else:
     size = WIDTH, HEIGHT = 2560, 1440
     tile_width = tile_height = 160
 screen = pygame.display.set_mode(size)
+# fight1()
 clock = pygame.time.Clock()
 FPS = 50
 
@@ -317,7 +359,10 @@ can = '.@,#*'
 talk = True
 t = True
 prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
+scene1_theme = pygame.mixer.Sound(file='data/scene1.wav')
+fon_theme = pygame.mixer.Sound(file='data/FonSound.wav')
 prison_theme.set_volume(0.2)
+scene1_theme.set_volume(0.2)
 NAME = start_screen()
 screen.fill((0, 0, 0))
 tiles_group.draw(screen)
