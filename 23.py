@@ -74,23 +74,8 @@ def terminate():
 
 def start_screen():
     fon_theme.play(loops=-1)
-    intro_text = ["ЗАСТАВКА", "",
-                  "Правила игры",
-                  "Если в правилах несколько строк,",
-                  "приходится выводить их построчно"]
-
-    fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    fon = pygame.transform.scale(load_image('fon.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
-    font = pygame.font.Font(None, 30)
-    text_coord = 50
-    for line in intro_text:
-        string_rendered = font.render(line, True, pygame.Color('black'))
-        intro_rect = string_rendered.get_rect()
-        text_coord += 10
-        intro_rect.top = text_coord
-        intro_rect.x = 10
-        text_coord += intro_rect.height
-        screen.blit(string_rendered, intro_rect)
 
     while True:
         for event1 in pygame.event.get():
@@ -173,13 +158,22 @@ def generate_level(level, *aa):
             elif level[y][x] == '+':
                 Tile('ground', x, y)
                 Tile('rock', x, y)
+            elif level[y][x] == 'C':
+                Tile('roadmid', x, y)
+                use.append(Use('car', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
+            elif level[y][x] == '_':
+                Tile('road', x, y)
+            elif level[y][x] == '~':
+                Tile('roadmid', x, y)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, doorss, use
 
 
 def new_level(lv):
+    global lvl
     if lv == 'endofpart1':
-        part2()
+        if lvl == 'PrisonHallMap.txt':
+            part2()
     elif lv != '':
         screen.fill((0, 0, 0))
         all_sprites.empty()
@@ -187,7 +181,7 @@ def new_level(lv):
         player_group.empty()
         use_group.empty()
         door_group.empty()
-        global cur_level, player, level_x, level_y, door, lvl, useful
+        global cur_level, player, level_x, level_y, door, useful
         cur_level = load_level(lv)
         player, level_x, level_y, door, useful = generate_level(cur_level, *doors[lv])
         if lvl == 'PrisonCorridorMap.txt' and lv == 'PrisonRoomMap.txt':
@@ -221,6 +215,7 @@ def first_scene():
     pygame.display.flip()
     scene = True
     scene1_theme.play()
+    tic = None
     while scene:
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
@@ -236,15 +231,18 @@ def first_scene():
             tic = pygame.transform.scale(load_image('6.jpg'), (WIDTH, HEIGHT))
         elif time > 11.2:
             tic = pygame.transform.scale(load_image('5.jpg'), (WIDTH, HEIGHT))
-        elif time > 8.8:
+        elif time > 9.5:
             tic = pygame.transform.scale(load_image('4.jpg'), (WIDTH, HEIGHT))
-        elif time > 6.6:
+        elif time > 4.5:
             tic = pygame.transform.scale(load_image('3.jpg'), (WIDTH, HEIGHT))
-        elif time > 4.2:
+        elif time > 4:
             tic = pygame.transform.scale(load_image('2.jpg'), (WIDTH, HEIGHT))
-        else:
+        elif time > 3:
             tic = pygame.transform.scale(load_image('1.jpg'), (WIDTH, HEIGHT))
-        screen.blit(tic, (0, 0))
+        else:
+            screen.fill((0, 0, 0))
+        if tic is not None:
+            screen.blit(tic, (0, 0))
         pygame.display.flip()
         time += clock.tick() / 1000
     scene1_theme.stop()
@@ -268,7 +266,7 @@ def first_scene():
             if e.type == pygame.KEYDOWN:
                 if e.key == pygame.K_ESCAPE:
                     terminate()
-                if e.key == 13:
+                if e.key == 13 and name != '':
                     inputt = False
                 if e.key == pygame.K_BACKSPACE:
                     name = name[:-1]
@@ -287,24 +285,131 @@ def part2():
     global under
     under = 'ground'
     prison_theme.stop()
+    ww = True
+    screen.fill((0, 0, 0))
+    tim = 0
+    font = pygame.font.Font(None, tile_height)
+    while ww:
+        for w in pygame.event.get():
+            if w.type == pygame.QUIT:
+                terminate()
+            if w.type == pygame.KEYDOWN:
+                if w.key == 13:
+                    if tim < 15:
+                        tim = 15
+                    else:
+                        ww = False
+                if w.key == pygame.K_ESCAPE:
+                    terminate()
+        if tim < 3:
+            fon = pygame.transform.scale(load_image('1.png'), (WIDTH, HEIGHT))
+        elif tim < 6:
+            fon = pygame.transform.scale(load_image('2.png'), (WIDTH, HEIGHT))
+        elif tim < 9:
+            fon = pygame.transform.scale(load_image('3.png'), (WIDTH, HEIGHT))
+        elif tim < 12:
+            fon = pygame.transform.scale(load_image('4.png'), (WIDTH, HEIGHT))
+        else:
+            fon = pygame.transform.scale(load_image('Logo.png'), (WIDTH, HEIGHT))
+        screen.blit(fon, (0, 0))
+        if tim > 15:
+            if int(tim) % 2 == 0:
+                string_rendered = font.render('[Нажмите Enter]', True, pygame.Color('white'))
+            else:
+                string_rendered = font.render('[Нажмите Enter]', True, pygame.Color('black'))
+            intro_rect = string_rendered.get_rect()
+            intro_rect.top = 8 * tile_height
+            intro_rect.x = 5 * tile_width
+            screen.blit(string_rendered, intro_rect)
+        tim += clock.tick() / 1000
+        pygame.display.flip()
+    after_theme.play(loops=-1)
     new_level('AroundPrison.txt')
 
 
 def fight1():
-    screen.fill((0, 0, 0))
-    dialog(['Перед вами грозный противник.', 'Ваше стремление помочь улетучивается, но уже поздно', 'отступать'])
-    btns = [pygame.color.Color('green'), (0, 0, 0), (0, 0, 0), (0, 0, 0)]
+    btns = [pygame.color.Color('green'), (255, 255, 255)]
+    font = pygame.font.Font(None, int(tile_height * 1.5))
+    b1 = 'Атака'
+    b2 = 'Действие'
+    count = 0
     while True:
+        screen.fill((0, 0, 0))
+        if count == 0:
+            dialog(['Перед вами грозный противник.',
+                    'Ваше стремление помочь улетучивается, но уже поздно', 'отступать'])
+        elif count == 1:
+            dialog(['Вы молите противника не атаковать вас.', 'Противник засомневался...', 'Его атака снижена!'])
+        elif count == 2:
+            dialog(['Вы молите противника не атаковать вас.', '* Я не буду сражаться с тобой. Уйди с пути.'])
+        elif count == 3:
+            dialog(['Вы уговаривайте противника отступить.', '* Я не позволю ему уйти, я наконец-то могу отомстить!'])
+        elif count == 4:
+            dialog(['Вы уговаривайте противника отступить.', '* Возможно ты прав... Я дам ему уйти на этот раз.',
+                    'Но если я увижу, что он продолжает делать ЭТО, ему конец!'])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    terminate()
+                if event.key == pygame.K_DOWN:
+                    btns = btns[::-1]
+                if event.key == pygame.K_UP:
+                    btns = btns[::-1]
+                if event.key == 13:
+                    if b1 == 'Конец':
+                        return
+                    elif b1 == 'Атака':
+                        if btns[0] == (255, 255, 255):
+                            b1 = 'Уговор'
+                            b2 = 'Мольба'
+                    else:
+                        if btns[0] == (255, 255, 255):
+                            if count == 0 or count == 3:
+                                count = 1
+                            elif count == 1 or count == 3:
+                                count = 2
+                        else:
+                            if count == 0 or count == 1:
+                                count = 3
+                            elif count == 2:
+                                count = 4
+                        if count == 4:
+                            b1 = 'Конец'
+                        else:
+                            b1 = 'Атака'
+                            b2 = 'Действие'
+                if event.key == 304 and count != 4:
+                    b1 = 'Атака'
+                    b2 = 'Действие'
         pygame.draw.rect(screen, btns[0], ((tile_width, 0.5 * tile_height),
                                            (5 * tile_width, 2 * tile_height)), int(1 / 16 * tile_height))
+        string_rendered1 = font.render(b1, True, btns[0])
+        intro_rect = string_rendered1.get_rect()
+        intro_rect.top = tile_height * 1.025
+        if b1 == 'Уговор':
+            intro_rect.x = tile_width * 1.7
+        else:
+            intro_rect.x = tile_width * 2
+        screen.blit(string_rendered1, intro_rect)
+        if count != 4:
+            pygame.draw.rect(screen, btns[1], ((tile_width, 3 * tile_height),
+                                               (5 * tile_width, 2 * tile_height)), int(1 / 16 * tile_height))
+            string_rendered1 = font.render(b2, True, btns[1])
+            intro_rect = string_rendered1.get_rect()
+            intro_rect.top = tile_height * 3.525
+            if b2 == 'Мольба':
+                intro_rect.x = tile_width * 1.7
+            else:
+                intro_rect.x = tile_width
+        screen.blit(string_rendered1, intro_rect)
         pygame.display.flip()
 
 
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
-a = input()
+# a = input()
+a = '2'
 under = 'empty'
 pygame.init()
 if a == '1':
@@ -317,7 +422,6 @@ else:
     size = WIDTH, HEIGHT = 2560, 1440
     tile_width = tile_height = 160
 screen = pygame.display.set_mode(size)
-# fight1()
 clock = pygame.time.Clock()
 FPS = 50
 
@@ -338,7 +442,8 @@ tile_images = {
     'ground': pygame.transform.scale(load_image('Ground.png'), (tile_width, tile_height)),
     'road': pygame.transform.scale(load_image('Road.png'), (tile_width, tile_height)),
     'roadmid': pygame.transform.scale(load_image('RoadMid.png'), (tile_width, tile_height)),
-    'rock': pygame.transform.scale(load_image('rock.png', -1), (tile_width, tile_height))
+    'rock': pygame.transform.scale(load_image('rock.png', -1), (tile_width, tile_height)),
+    'car': pygame.transform.scale(load_image('Car.png', -1), (int(tile_width * 6.75), int(tile_height * 2.25)))
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
@@ -361,8 +466,10 @@ t = True
 prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
 scene1_theme = pygame.mixer.Sound(file='data/scene1.wav')
 fon_theme = pygame.mixer.Sound(file='data/FonSound.wav')
+after_theme = pygame.mixer.Sound(file='data/afterfall_theme.wav')
 prison_theme.set_volume(0.2)
 scene1_theme.set_volume(0.2)
+after_theme.set_volume(0.2)
 NAME = start_screen()
 screen.fill((0, 0, 0))
 tiles_group.draw(screen)
@@ -381,8 +488,8 @@ while True:
                     player.pos_x -= 1
             if event.key == pygame.K_RIGHT and not talk:
                 player.image = player.imager
-                if cur_level[player.pos_y][player.pos_x + 1] in can:
-                    if player.pos_x < level_x:
+                if player.pos_x < level_x:
+                    if cur_level[player.pos_y][player.pos_x + 1] in can:
                         player.pos_x += 1
             if event.key == pygame.K_UP and not talk:
                 player.image = player.imageb
