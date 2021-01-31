@@ -1,6 +1,7 @@
 import pygame
 import sys
 import os
+import random
 
 
 class Tile(pygame.sprite.Sprite):
@@ -48,6 +49,27 @@ class Use(pygame.sprite.Sprite):
         self.x = pos_x
         self.y = pos_y
         self.text = text
+
+
+class Pow(pygame.sprite.Sprite):
+    def __init__(self, *group):
+        self.image = pygame.transform.scale(load_image("pow.png", -1), (tile_width * 2, tile_height * 2))
+        self.rect = self.image.get_rect()
+        while True:
+            self.rect.x = random.randrange(WIDTH - tile_width * 2)
+            self.rect.y = random.randrange(HEIGHT - tile_width * 2)
+            if pygame.sprite.spritecollideany(self, pow_group):
+                continue
+            else:
+                break
+        self.tap = False
+        super().__init__(*group)
+
+    def update(self, *args):
+        if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
+                self.rect.collidepoint(args[0].pos):
+            self.image = load_image('White.png', -1)
+            self.tap = True
 
 
 def load_image(name, colorkey=None):
@@ -165,6 +187,16 @@ def generate_level(level, *aa):
                 Tile('road', x, y)
             elif level[y][x] == '~':
                 Tile('roadmid', x, y)
+            elif level[y][x] == '`':
+                Tile('afterground', x, y)
+            elif level[y][x] == '%':
+                Tile('afterwall', x, y)
+            elif level[y][x] == 'D':
+                Tile('afterground', x, y)
+                use.append(Use('afterdin', x, y, ['П-Помоги мне!']))
+            elif level[y][x] == 'S':
+                Tile('afterground', x, y)
+                use.append(Use('enemy', x, y, ['fight']))
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y, doorss, use
 
@@ -333,6 +365,11 @@ def fight1():
     b1 = 'Атака'
     b2 = 'Действие'
     count = 0
+    image = pygame.transform.scale(load_image('PrisonerFront3.png', -1), (int(tile_width * 5.5),
+                                                                          int(tile_height * 5.5)))
+    hp = 5
+    enemyhp = 10
+
     while True:
         screen.fill((0, 0, 0))
         if count == 0:
@@ -347,6 +384,13 @@ def fight1():
         elif count == 4:
             dialog(['Вы уговаривайте противника отступить.', '* Возможно ты прав... Я дам ему уйти на этот раз.',
                     'Но если я увижу, что он продолжает делать ЭТО, ему конец!'])
+
+        elif count == 5:
+            dialog(['Вы аттакуете противника', '* Эй, если ты будешь аттаковать меня, то я не буду бездействовать!'])
+        elif count == 6:
+            dialog(['Вы пытались аттаковать противника...', 'У вас не очень получилось сделать это'])
+        elif count == 7:
+            dialog(['Вы аттакуете противника!', '* И это всё что ты можешь?'])
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 terminate()
@@ -359,20 +403,35 @@ def fight1():
                     btns = btns[::-1]
                 if event.key == 13:
                     if b1 == 'Конец':
-                        return
+                        end()
                     elif b1 == 'Атака':
                         if btns[0] == (255, 255, 255):
                             b1 = 'Уговор'
                             b2 = 'Мольба'
+                        else:
+                            dmg = attack()
+                            enemyhp -= dmg
+                            if enemyhp <= 0:
+                                end()
+                            hp -= enemy_attack()
+                            if count == 4:
+                                count = 5
+                            elif dmg == 0:
+                                count = 6
+                            else:
+                                count = 7
                     else:
                         if btns[0] == (255, 255, 255):
-                            if count == 0 or count == 3:
+                            if count == 0 or count == 3 or count >= 5:
                                 count = 1
-                            elif count == 1 or count == 3:
+                                hp -= enemy_attack()
+                            elif count == 1 or count == 3 or count >= 5:
                                 count = 2
+                                hp -= enemy_attack()
                         else:
                             if count == 0 or count == 1:
                                 count = 3
+                                hp -= enemy_attack()
                             elif count == 2:
                                 count = 4
                         if count == 4:
@@ -380,6 +439,7 @@ def fight1():
                         else:
                             b1 = 'Атака'
                             b2 = 'Действие'
+
                 if event.key == 304 and count != 4:
                     b1 = 'Атака'
                     b2 = 'Действие'
@@ -404,12 +464,164 @@ def fight1():
             else:
                 intro_rect.x = tile_width
         screen.blit(string_rendered1, intro_rect)
+        if hp <= 0:
+            game_over()
+        screen.blit(image, (tile_width * 8, 0))
         pygame.display.flip()
+
+
+def attack():
+    screen.fill((0, 0, 0))
+    time = 0
+    hits = 0
+    a = []
+    for _ in range(random.choice([3, 4])):
+        a.append(Pow(pow_group))
+    run = True
+    while run:
+        screen.fill((0, 0, 0))
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            pow_group.update(event)
+        pow_group.draw(screen)
+        time += clock.tick() / 1000
+        pygame.display.flip()
+        if time > 3.5:
+            run = False
+    for i in a:
+        if i.tap:
+            hits += 1
+    pow_group.empty()
+    return hits
+
+
+def enemy_attack():
+    hp = 0
+    screen.fill((0, 0, 0))
+    hero = pygame.transform.scale(load_image('HeroFront.png', -1), (tile_width, tile_height))
+    coords = [7.5 * tile_height, 4 * tile_width]
+    x = 0
+    yy = 0
+    enemy = pygame.transform.scale(load_image('atc1.png', -1), (tile_width, tile_height))
+    var = random.choice([0, 1, 2, 3])
+    if var == 0:
+        ecoords = [tile_width * 3.5, 0]
+        move = [2, 2]
+    elif var == 1:
+        ecoords = [tile_width * 11.5, 0]
+        move = [-2, 2]
+    elif var == 3:
+        ecoords = [tile_width * 3.5, tile_height * 8]
+        move = [2, -2]
+    else:
+        ecoords = [tile_width * 11.5, tile_height * 8]
+        move = [-2, -2]
+    linecoords = ecoords[:]
+    cooldown = 0
+    tr = True
+    while tr:
+        a = [ecoords[0] + 0.1375 * tile_width, ecoords[1] + 0.0375 * tile_width,
+             ecoords[0] + 0.7125 * tile_width, 0.825 * tile_width + ecoords[1]]
+        b = [0.225 * tile_width + coords[0], coords[1] + 0.05 * tile_width,
+             0.5875 * tile_width + coords[0], coords[1] + 0.9125 * tile_width]
+        screen.fill((0, 0, 0))
+        for i in pygame.event.get():
+            if i.type == pygame.QUIT:
+                terminate()
+            if i.type == pygame.KEYDOWN:
+                if i.key == pygame.K_UP:
+                    yy = -1
+                if i.key == pygame.K_DOWN:
+                    yy = 1
+                if i.key == pygame.K_LEFT:
+                    x = -1
+                if i.key == pygame.K_RIGHT:
+                    x = 1
+            if i.type == pygame.KEYUP:
+                if i.key == pygame.K_UP and yy == -1:
+                    yy = 0
+                if i.key == pygame.K_DOWN and yy == 1:
+                    yy = 0
+                if i.key == pygame.K_LEFT and x == -1:
+                    x = 0
+                if i.key == pygame.K_RIGHT and x == 1:
+                    x = 0
+        coords[0] += x
+        coords[1] += yy
+        if coords[1] < tile_height:
+            coords[1] = tile_height
+        if coords[1] > tile_height * 7:
+            coords[1] = tile_height * 7
+        if coords[0] < tile_width * 4.5:
+            coords[0] = tile_width * 4.5
+        if coords[0] > tile_width * 10.5:
+            coords[0] = tile_width * 10.5
+        pygame.draw.rect(screen, (255, 255, 255),
+                         ((tile_width * 4.5, tile_height), (tile_width * 7, tile_height * 7)),
+                         int(tile_height * 0.0625))
+        screen.blit(hero, coords)
+        ecoords[0] += move[0]
+        ecoords[1] += move[1]
+        pygame.draw.line(screen, (255, 255, 255),
+                         (linecoords[0] + 0.15 * tile_width, linecoords[1] + 0.35 * tile_width),
+                         (ecoords[0] + 0.15 * tile_width, ecoords[1] + 0.35 * tile_width), int(tile_height * 0.0625))
+        pygame.draw.line(screen, (255, 255, 255),
+                         (linecoords[0] + 0.275 * tile_width, linecoords[1] + 0.1125 * tile_width),
+                         (ecoords[0] + 0.275 * tile_width, ecoords[1] + 0.1125 * tile_width), int(tile_height * 0.0625))
+        pygame.draw.line(screen, (255, 255, 255),
+                         (linecoords[0] + 0.5 * tile_width, linecoords[1] + 0.0625 * tile_width),
+                         (ecoords[0] + 0.5 * tile_width, ecoords[1] + 0.0625 * tile_width), int(tile_height * 0.0625))
+        pygame.draw.line(screen, (255, 255, 255),
+                         (linecoords[0] + 0.7 * tile_width, linecoords[1] + 0.1625 * tile_width),
+                         (ecoords[0] + 0.7 * tile_width, ecoords[1] + 0.1625 * tile_width), int(tile_height * 0.0625))
+        screen.blit(enemy, ecoords)
+        if ecoords[1] < 0 or ecoords[1] > HEIGHT:
+            tr = False
+        if int(a[0]) > int(b[2]) + int(b[0]) or int(a[0]) + int(a[2]) < int(b[0]) or \
+                int(a[1]) > int(b[1]) + int(b[3]) or int(a[3]) + int(a[1]) < int(b[1]):
+            if cooldown <= 0:
+                hp += 1
+                cooldown = 0.5
+        cooldown -= clock.tick() / 1000
+        pygame.display.flip()
+        clock.tick(FPS)
+    return hp
+
+
+def game_over():
+    fon = pygame.transform.scale(load_image('end_screen.png'), (WIDTH, HEIGHT))
+    screen.blit(fon, (0, 0))
+    pygame.display.flip()
+    while True:
+        for r in pygame.event.get():
+            if r.type == pygame.QUIT:
+                terminate()
+            elif r.type == pygame.KEYDOWN:
+                if r.key == pygame.K_ESCAPE:
+                    terminate()
+                if r.key == 13:
+                    terminate()
+
+
+def end():
+    screen.fill((0, 0, 0))
+    dialog(['Вы прошли ДЕМО-версию игры!', 'Спасибо за то, что играли)'])
+    pygame.display.flip()
+    while True:
+        for r in pygame.event.get():
+            if r.type == pygame.QUIT:
+                terminate()
+            elif r.type == pygame.KEYDOWN:
+                if r.key == pygame.K_ESCAPE:
+                    terminate()
+                if r.key == 13:
+                    terminate()
 
 
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
 # a = input()
-a = '2'
+a = '1'
 under = 'empty'
 pygame.init()
 if a == '1':
@@ -423,8 +635,7 @@ else:
     tile_width = tile_height = 160
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
-FPS = 50
-
+FPS = 144
 tile_images = {
     'frontwall': pygame.transform.scale(load_image('PrisonWallFront.png'), (tile_width, tile_height)),
     'empty': pygame.transform.scale(load_image('PrisonGround.png'), (tile_width, tile_height)),
@@ -436,20 +647,27 @@ tile_images = {
     'cornerrwall': pygame.transform.scale(load_image('PrisonWallCornerR.png', -1), (tile_width, tile_height)),
     'mirror': pygame.transform.scale(load_image('Mirror.png', -1), (tile_width, tile_height * 2)),
     'bed': pygame.transform.scale(load_image('PrisonBed.png', -1), (tile_width * 2, tile_height)),
-    'prisoner1': pygame.transform.scale(load_image('PrisonerFront1.png', -1), (tile_width, tile_height)),
+    'prisoner1': pygame.transform.scale(load_image('PrisonerFront1.png', -1), (int(tile_width * 1.5),
+                                                                               int(tile_height * 1.5))),
     'prisondin': pygame.transform.scale(load_image('DinOfficerFront.png', -1), (tile_width, tile_height)),
     'prisoner2': pygame.transform.scale(load_image('PrisonerFront2.png', -1), (tile_width, tile_height)),
     'ground': pygame.transform.scale(load_image('Ground.png'), (tile_width, tile_height)),
     'road': pygame.transform.scale(load_image('Road.png'), (tile_width, tile_height)),
     'roadmid': pygame.transform.scale(load_image('RoadMid.png'), (tile_width, tile_height)),
     'rock': pygame.transform.scale(load_image('rock.png', -1), (tile_width, tile_height)),
-    'car': pygame.transform.scale(load_image('Car.png', -1), (int(tile_width * 6.75), int(tile_height * 2.25)))
+    'car': pygame.transform.scale(load_image('Car.png', -1), (int(tile_width * 6.75), int(tile_height * 2.25))),
+    'afterground': pygame.transform.scale(load_image('AfterPrisonGround.png'), (tile_width, tile_height)),
+    'afterwall': pygame.transform.scale(load_image('AfterPrisonWallFront.png'), (tile_width, tile_height)),
+    'afterdin': pygame.transform.scale(load_image('DinPrisonerFront.png', -1), (tile_width, tile_height)),
+    'enemy': pygame.transform.scale(load_image('PrisonerFront3.png', -1), (int(tile_width * 1.5),
+                                                                           int(tile_height * 1.5)))
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
     'PrisonCorridorMap.txt': ['', '', 'PrisonHallMap.txt', 'PrisonRoomMap.txt', ''],
     'PrisonHallMap.txt': ['PrisonCorridorMap.txt', 'endofpart1'],
-    'AroundPrison.txt': []
+    'AroundPrison.txt': [],
+    'AfterPrison.txt': []
 }
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -457,10 +675,11 @@ tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 door_group = pygame.sprite.Group()
 use_group = pygame.sprite.Group()
+pow_group = pygame.sprite.Group()
 cur_level = load_level('PrisonRoomMap.txt')
 lvl = 'PrisonRoomMap.txt'
 player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorridorMap.txt')
-can = '.@,#*'
+can = '.@,#*`'
 talk = True
 t = True
 prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
@@ -493,14 +712,21 @@ while True:
                         player.pos_x += 1
             if event.key == pygame.K_UP and not talk:
                 player.image = player.imageb
-                if cur_level[player.pos_y - 1][player.pos_x] in can:
+                if player.pos_y == 0:
+                    new_level('AroundPrison.txt')
+                    player.pos_x += 2
+                    player.pos_y += 2
+                elif cur_level[player.pos_y - 1][player.pos_x] in can:
                     if player.pos_y > 0:
                         player.pos_y -= 1
             if event.key == pygame.K_DOWN and not talk:
                 player.image = player.imagef
-                if cur_level[player.pos_y + 1][player.pos_x] in can:
-                    if player.pos_y < level_y:
-                        player.pos_y += 1
+                try:
+                    if cur_level[player.pos_y + 1][player.pos_x] in can:
+                        if player.pos_y < level_y:
+                            player.pos_y += 1
+                except IndexError:
+                    new_level('AfterPrison.txt')
             if event.key == pygame.K_ESCAPE:
                 terminate()
             if event.key == 13:
@@ -520,7 +746,10 @@ while True:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x and y.y == player.pos_y + 1:
-                            dialog(y.text)
+                            if y.text == ['fight']:
+                                fight1()
+                            else:
+                                dialog(y.text)
                 elif player.image == player.imagel:
                     for i in door:
                         if i.x == player.pos_x - 1 and i.y == player.pos_y:
@@ -544,5 +773,8 @@ while True:
         door_group.draw(screen)
         use_group.draw(screen)
         player_group.draw(screen)
+    if lvl == 'AfterPrison.txt' and t is False:
+        dialog(['* П-Помогите!', ' Он хочет убить меня!'])
+        t = None
     pygame.display.flip()
     clock.tick(FPS)
