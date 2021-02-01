@@ -1,60 +1,87 @@
+# Подключаем библиотеки
 import pygame
 import sys
 import os
 import random
 
 
+# Класс плитки
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
+        # Добавляем в группы спрайтов
         super().__init__(tiles_group, all_sprites)
+        # Загружаем изображение из словаря
         self.image = tile_images[tile_type]
+        # Ставим на место на экране
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
 
+# Класс игрока
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
+        # Добавляем в группы спрайтов
         super().__init__(player_group, all_sprites)
+        # Загружаем 4 возможных состояния поворота игрока
         self.imagef = pygame.transform.scale(load_image('HeroFront.png', -1), (tile_width, tile_height))
         self.imageb = pygame.transform.scale(load_image('HeroBack.png', -1), (tile_width, tile_height))
         self.imager = pygame.transform.scale(load_image('HeroRight.png', -1), (tile_width, tile_height))
         self.imagel = pygame.transform.scale(load_image('HeroLeft.png', -1), (tile_width, tile_height))
+        # Изначальный поворот
         self.image = self.imagef
+        # Записываем позицию по x и y
         self.pos_x, self.pos_y = pos_x, pos_y
+        # Ставим на место на экране
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
 
+    # Метод обновляющий положение игрока на экране
     def update(self):
         self.rect = self.image.get_rect().move(
             tile_width * self.pos_x, tile_height * self.pos_y)
 
 
+# Класс дверей
 class Door(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, place):
+        # Добовляем в группы спрайтов
         super().__init__(door_group, all_sprites)
+        # Загружаем изображения из словаря
         self.image = tile_images[tile_type]
+        # Ставим на место на экране
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
+        # Записываем место, куда ведёт эта дверь
         self.place = place
+        # Записываем координаты двери
         self.x = pos_x
         self.y = pos_y
 
 
+# Класс объектов, с которыми можно взаимодейстовать
 class Use(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y, text):
+        # добавляем в группы спрайтов
         super().__init__(use_group, all_sprites)
+        # Загружаем изображение из словаря
         self.image = tile_images[tile_type]
+        # Ставим на место на экране
         self.rect = self.image.get_rect().move(
             tile_width * pos_x, tile_height * pos_y)
+        # Записываем координаты
         self.x = pos_x
         self.y = pos_y
+        # Записываем сообщение, которое предмет выведет на экран при взаимодейтвии
         self.text = text
 
 
+# Класс изображения для атаки во время битвы
 class Pow(pygame.sprite.Sprite):
     def __init__(self, *group):
+        # Загружаем изображение
         self.image = pygame.transform.scale(load_image("pow.png", -1), (tile_width * 2, tile_height * 2))
         self.rect = self.image.get_rect()
+        # Расставляем на экран так, чтобы не косались друг друга и не выходили за экран
         while True:
             self.rect.x = random.randrange(WIDTH - tile_width * 2)
             self.rect.y = random.randrange(HEIGHT - tile_width * 2)
@@ -62,16 +89,20 @@ class Pow(pygame.sprite.Sprite):
                 continue
             else:
                 break
+        # Флажок показывающий нажали или нет на объект
         self.tap = False
         super().__init__(*group)
 
+    # Метод обновляющий объект
     def update(self, *args):
+        # Если на объект нажали, он становится невидимым и флажок нажатия меняем на True
         if args and args[0].type == pygame.MOUSEBUTTONDOWN and \
                 self.rect.collidepoint(args[0].pos):
             self.image = load_image('White.png', -1)
             self.tap = True
 
 
+# Функция загружающая объект из папки data с возможностью сделать фон невидимым
 def load_image(name, colorkey=None):
     fullname = os.path.join('data', name)
     # если файл не существует, то выходим
@@ -89,16 +120,20 @@ def load_image(name, colorkey=None):
     return image
 
 
+# Функция закрывающая игру
 def terminate():
     pygame.quit()
     sys.exit()
 
 
+# Функция начала игры
 def start_screen():
+    # Запускаем фоновую музыку
     fon_theme.play(loops=-1)
+    # загружаем фоновое избражение и выводим его на экран
     fon = pygame.transform.scale(load_image('fon.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
-
+    # игровой цикл с возможностью выйти и нажать Enter
     while True:
         for event1 in pygame.event.get():
             if event1.type == pygame.QUIT:
@@ -106,30 +141,36 @@ def start_screen():
             elif event1.type == pygame.KEYDOWN or \
                     event1.type == pygame.MOUSEBUTTONDOWN:
                 fon_theme.stop()
+                # При нажатии возвращаем работу функции first_scene()
                 return first_scene()
         pygame.display.flip()
         clock.tick(FPS)
 
 
+# Функция загрузки уровня
 def load_level(filename):
     filename = "data/" + filename
     # читаем уровень, убирая символы перевода строки
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
-
     # и подсчитываем максимальную длину
     max_width = max(map(len, level_map))
-
     # дополняем каждую строку пустыми клетками ('.')
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
+# Функция генерации уровня
 def generate_level(level, *aa):
+    # Задаём начальные значения
     new_player, x, y = None, None, None
+    # Счётчик дверей
     ii = 0
+    # Список дверей на уровне
     doorss = []
+    # Список интерактивных объектов
     use = []
     global under
+    # Цикл загружающий уровень и создающий объекты по символам
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -159,9 +200,10 @@ def generate_level(level, *aa):
                 Tile('empty', x, y)
                 ii += 1
             elif level[y][x] == '=':
+                Tile('empty', x, y)
                 use.append(Use('bed', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
             elif level[y][x] == '-':
-                Tile('empty', x, y)
+                use.append(Use('white', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
             elif level[y][x] == 's':
                 Tile('empty', x, y)
                 use.append(Use('prisoner1', x, y, ['* И что ты смотришь?']))
@@ -185,8 +227,10 @@ def generate_level(level, *aa):
                 use.append(Use('car', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
             elif level[y][x] == '_':
                 Tile('road', x, y)
+                use.append(Use('white', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
             elif level[y][x] == '~':
                 Tile('roadmid', x, y)
+                use.append(Use('white', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
             elif level[y][x] == '`':
                 Tile('afterground', x, y)
             elif level[y][x] == '%':
@@ -197,41 +241,59 @@ def generate_level(level, *aa):
             elif level[y][x] == 'S':
                 Tile('afterground', x, y)
                 use.append(Use('enemy', x, y, ['fight']))
-    # вернем игрока, а также размер поля в клетках
+            elif level[y][x] == ':':
+                Tile('empty', x, y)
+                use.append(Use('white', x, y, ['* И что ты смотришь?']))
+            elif level[y][x] == '!':
+                Tile('afterground', x, y)
+                use.append(Use('white', x, y, ['fight']))
+    # вернем игрока, размер поля в клеткахб двери и интерактивные объекты на уровне
     return new_player, x, y, doorss, use
 
 
+# Функция переключающаяся на новый уровень
 def new_level(lv):
     global lvl
+    # При определённом значении перехрдим во вторую локацию
     if lv == 'endofpart1':
         if lvl == 'PrisonHallMap.txt':
             part2()
     elif lv != '':
+        # Закрашиваем поле и опусташаем группы спрайтов
         screen.fill((0, 0, 0))
         all_sprites.empty()
         tiles_group.empty()
         player_group.empty()
         use_group.empty()
         door_group.empty()
+        # загружаем нужные глобальные переменные
         global cur_level, player, level_x, level_y, door, useful
+        # Загружаем уровень
         cur_level = load_level(lv)
+        # генерируем уровень
         player, level_x, level_y, door, useful = generate_level(cur_level, *doors[lv])
+        # При переходе из определённой локации в другую, двигаем игрока к двери, из которой он вышел
         if lvl == 'PrisonCorridorMap.txt' and lv == 'PrisonRoomMap.txt':
             player.pos_x += 2
         elif lvl == 'PrisonHallMap.txt' and lv == 'PrisonCorridorMap.txt':
             player.pos_x += 7
             player.pos_y -= 1
+        # прорисовываем уровень
         all_sprites.draw(screen)
         door_group.draw(screen)
         lvl = lv
 
 
+# Функция диалогового окна
 def dialog(text):
+    # Глобальная переменная показывающая находится ли игрок в диалоге
     global talk
     talk = True
+    # Рисуем рамки окна
     pygame.draw.rect(screen, (255, 255, 255), ((tile_width, 5.5 * tile_height), (14 * tile_width, 3 * tile_height)))
     pygame.draw.rect(screen, (0, 0, 0), ((tile_width * 1.0625, tile_height * 5.5625),
                                          (tile_width * 13.875, 2.875 * tile_height)))
+    # Загружаем построчно текст в окно
     font = pygame.font.Font(None, int(0.625 * tile_width))
     for iii in range(len(text)):
         string_rendered = font.render(text[iii], True, pygame.Color('white'))
@@ -487,7 +549,7 @@ def attack():
         pow_group.draw(screen)
         time += clock.tick() / 1000
         pygame.display.flip()
-        if time > 3.5:
+        if time > 4:
             run = False
     for i in a:
         if i.tap:
@@ -507,16 +569,16 @@ def enemy_attack():
     var = random.choice([0, 1, 2, 3])
     if var == 0:
         ecoords = [tile_width * 3.5, 0]
-        move = [2, 2]
+        move = [0.025 * tile_height, 0.025 * tile_height]
     elif var == 1:
         ecoords = [tile_width * 11.5, 0]
-        move = [-2, 2]
+        move = [-0.025 * tile_height, 0.025 * tile_height]
     elif var == 3:
         ecoords = [tile_width * 3.5, tile_height * 8]
-        move = [2, -2]
+        move = [0.025 * tile_height, -0.025 * tile_height]
     else:
         ecoords = [tile_width * 11.5, tile_height * 8]
-        move = [-2, -2]
+        move = [-0.025 * tile_height, -0.025 * tile_height]
     linecoords = ecoords[:]
     cooldown = 0
     tr = True
@@ -531,21 +593,21 @@ def enemy_attack():
                 terminate()
             if i.type == pygame.KEYDOWN:
                 if i.key == pygame.K_UP:
-                    yy = -1
+                    yy = -0.0125 * tile_height
                 if i.key == pygame.K_DOWN:
-                    yy = 1
+                    yy = 0.0125 * tile_height
                 if i.key == pygame.K_LEFT:
-                    x = -1
+                    x = -0.0125 * tile_height
                 if i.key == pygame.K_RIGHT:
-                    x = 1
+                    x = 0.0125 * tile_height
             if i.type == pygame.KEYUP:
-                if i.key == pygame.K_UP and yy == -1:
+                if i.key == pygame.K_UP and yy == -0.0125 * tile_height:
                     yy = 0
-                if i.key == pygame.K_DOWN and yy == 1:
+                if i.key == pygame.K_DOWN and yy == 0.0125 * tile_height:
                     yy = 0
-                if i.key == pygame.K_LEFT and x == -1:
+                if i.key == pygame.K_LEFT and x == -0.0125 * tile_height:
                     x = 0
-                if i.key == pygame.K_RIGHT and x == 1:
+                if i.key == pygame.K_RIGHT and x == 0.0125 * tile_height:
                     x = 0
         coords[0] += x
         coords[1] += yy
@@ -620,8 +682,7 @@ def end():
 
 
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
-# a = input()
-a = '1'
+a = input()
 under = 'empty'
 pygame.init()
 if a == '1':
@@ -660,7 +721,8 @@ tile_images = {
     'afterwall': pygame.transform.scale(load_image('AfterPrisonWallFront.png'), (tile_width, tile_height)),
     'afterdin': pygame.transform.scale(load_image('DinPrisonerFront.png', -1), (tile_width, tile_height)),
     'enemy': pygame.transform.scale(load_image('PrisonerFront3.png', -1), (int(tile_width * 1.5),
-                                                                           int(tile_height * 1.5)))
+                                                                           int(tile_height * 1.5))),
+    'white': pygame.transform.scale(load_image('White.png', -1), (tile_width, tile_height))
 }
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
@@ -739,7 +801,10 @@ while True:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x and y.y == player.pos_y - 1:
-                            dialog(y.text)
+                            if y.text == ['fight']:
+                                fight1()
+                            else:
+                                dialog(y.text)
                 elif player.image == player.imagef:
                     for i in door:
                         if i.x == player.pos_x and i.y == player.pos_y + 1:
@@ -756,14 +821,20 @@ while True:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x - 1 and y.y == player.pos_y:
-                            dialog(y.text)
+                            if y.text == ['fight']:
+                                fight1()
+                            else:
+                                dialog(y.text)
                 elif player.image == player.imager:
                     for i in door:
                         if i.x == player.pos_x + 1 and i.y == player.pos_y:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x + 1 and y.y == player.pos_y:
-                            dialog(y.text)
+                            if y.text == ['fight']:
+                                fight1()
+                            else:
+                                dialog(y.text)
     if t:
         dialog([NAME + ' значит...'])
         t = False
