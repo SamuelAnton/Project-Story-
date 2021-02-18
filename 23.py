@@ -303,7 +303,9 @@ def dialog(text):
         screen.blit(string_rendered, intro_rect)
 
 
+# Функция первой кат-сцены и выбора имени
 def first_scene():
+    # Кат-сцена
     time = 0
     screen.fill((0, 0, 0))
     pygame.display.flip()
@@ -340,6 +342,7 @@ def first_scene():
         pygame.display.flip()
         time += clock.tick() / 1000
     scene1_theme.stop()
+    # Экран выбора имени
     screen.fill((0, 0, 0))
     pygame.draw.rect(screen, (255, 255, 255), (2 * tile_width, 2 * tile_height, 12 * tile_width, 2 * tile_height), 1)
     font = pygame.font.Font(None, tile_height)
@@ -361,10 +364,17 @@ def first_scene():
                 if e.key == pygame.K_ESCAPE:
                     terminate()
                 if e.key == 13 and name != '':
-                    inputt = False
+                    if name.lower() in names:
+                        pygame.draw.rect(screen, (0, 0, 0), (0, HEIGHT // 2, WIDTH, HEIGHT // 2))
+                        dialog(names[name.lower()])
+                    elif name.lower() == 'ammine' or name.lower() == 'аммайн':
+                        terminate()
+                    else:
+                        inputt = False
                 if e.key == pygame.K_BACKSPACE:
                     name = name[:-1]
-                if len(name) < 6 and e.unicode in 'ёйцукенгшщзхъфывапролджэячсмитьбюЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ':
+                if len(name) < 7 and e.unicode in 'ёйцукенгшщзхъфывапролджэячсмитьбюЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТ' \
+                                                  'ЬБЮqwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM':
                     name += e.unicode
         string_rendered = font.render(name, True, pygame.Color('white'))
         intro_rect = string_rendered.get_rect()
@@ -372,12 +382,16 @@ def first_scene():
         intro_rect.x = 2.0625 * tile_width
         screen.blit(string_rendered, intro_rect)
         pygame.display.flip()
+    # Возвращаем введённое пользователем имя
     return name
 
 
+# Вторая кат-сцена
 def part2():
+    # Переменная показывающая, что нужно рисовать под игроком
     global under
     under = 'ground'
+    # Вторая кат-сцена
     prison_theme.stop()
     ww = True
     screen.fill((0, 0, 0))
@@ -417,10 +431,12 @@ def part2():
             screen.blit(string_rendered, intro_rect)
         tim += clock.tick() / 1000
         pygame.display.flip()
+    # Запускаем новую локацию
     after_theme.play(loops=-1)
     new_level('AroundPrison.txt')
 
 
+# Функция боя с врагом
 def fight1():
     btns = [pygame.color.Color('green'), (255, 255, 255)]
     font = pygame.font.Font(None, int(tile_height * 1.5))
@@ -431,9 +447,9 @@ def fight1():
                                                                           int(tile_height * 5.5)))
     hp = 5
     enemyhp = 10
-
     while True:
         screen.fill((0, 0, 0))
+        # Варианты сообщения
         if count == 0:
             dialog(['Перед вами грозный противник.',
                     'Ваше стремление помочь улетучивается, но уже поздно', 'отступать'])
@@ -454,6 +470,7 @@ def fight1():
         elif count == 7:
             dialog(['Вы аттакуете противника!', '* И это всё что ты можешь?'])
         for event in pygame.event.get():
+            # Действие игрока
             if event.type == pygame.QUIT:
                 terminate()
             if event.type == pygame.KEYDOWN:
@@ -505,6 +522,7 @@ def fight1():
                 if event.key == 304 and count != 4:
                     b1 = 'Атака'
                     b2 = 'Действие'
+        # Рисуем компоненты боя
         pygame.draw.rect(screen, btns[0], ((tile_width, 0.5 * tile_height),
                                            (5 * tile_width, 2 * tile_height)), int(1 / 16 * tile_height))
         string_rendered1 = font.render(b1, True, btns[0])
@@ -526,12 +544,14 @@ def fight1():
             else:
                 intro_rect.x = tile_width
         screen.blit(string_rendered1, intro_rect)
+        # Проверка живы ли мы
         if hp <= 0:
             game_over()
         screen.blit(image, (tile_width * 8, 0))
         pygame.display.flip()
 
 
+# Функция нашей атаки врага
 def attack():
     screen.fill((0, 0, 0))
     time = 0
@@ -555,9 +575,11 @@ def attack():
         if i.tap:
             hits += 1
     pow_group.empty()
+    # Возвращает количество попаданий
     return hits
 
 
+# Функция атаки противника
 def enemy_attack():
     hp = 0
     screen.fill((0, 0, 0))
@@ -567,6 +589,7 @@ def enemy_attack():
     yy = 0
     enemy = pygame.transform.scale(load_image('atc1.png', -1), (tile_width, tile_height))
     var = random.choice([0, 1, 2, 3])
+    # Варианты расположения атаки
     if var == 0:
         ecoords = [tile_width * 3.5, 0]
         move = [0.025 * tile_height, 0.025 * tile_height]
@@ -592,6 +615,7 @@ def enemy_attack():
             if i.type == pygame.QUIT:
                 terminate()
             if i.type == pygame.KEYDOWN:
+                # Движение игрока
                 if i.key == pygame.K_UP:
                     yy = -0.0125 * tile_height
                 if i.key == pygame.K_DOWN:
@@ -611,6 +635,7 @@ def enemy_attack():
                     x = 0
         coords[0] += x
         coords[1] += yy
+        # Рамки поля
         if coords[1] < tile_height:
             coords[1] = tile_height
         if coords[1] > tile_height * 7:
@@ -625,6 +650,7 @@ def enemy_attack():
         screen.blit(hero, coords)
         ecoords[0] += move[0]
         ecoords[1] += move[1]
+        # Функция движения атаки противника
         pygame.draw.line(screen, (255, 255, 255),
                          (linecoords[0] + 0.15 * tile_width, linecoords[1] + 0.35 * tile_width),
                          (ecoords[0] + 0.15 * tile_width, ecoords[1] + 0.35 * tile_width), int(tile_height * 0.0625))
@@ -648,9 +674,11 @@ def enemy_attack():
         cooldown -= clock.tick() / 1000
         pygame.display.flip()
         clock.tick(FPS)
+    # Возвращаем количество попаданий по игроку
     return hp
 
 
+# Функция экрана конца игры если мы проиграли
 def game_over():
     fon = pygame.transform.scale(load_image('end_screen.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
@@ -666,6 +694,7 @@ def game_over():
                     terminate()
 
 
+# Функция экрана конца игры если мы прошли игру
 def end():
     screen.fill((0, 0, 0))
     dialog(['Вы прошли ДЕМО-версию игры!', 'Спасибо за то, что играли)'])
@@ -681,6 +710,7 @@ def end():
                     terminate()
 
 
+# Выбор разрешения экрана игры
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
 a = input()
 under = 'empty'
@@ -697,6 +727,7 @@ else:
 screen = pygame.display.set_mode(size)
 clock = pygame.time.Clock()
 FPS = 144
+# Словарь объектов игры
 tile_images = {
     'frontwall': pygame.transform.scale(load_image('PrisonWallFront.png'), (tile_width, tile_height)),
     'empty': pygame.transform.scale(load_image('PrisonGround.png'), (tile_width, tile_height)),
@@ -724,12 +755,33 @@ tile_images = {
                                                                            int(tile_height * 1.5))),
     'white': pygame.transform.scale(load_image('White.png', -1), (tile_width, tile_height))
 }
+# словарь дверей и куда они ведут
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
     'PrisonCorridorMap.txt': ['', '', 'PrisonHallMap.txt', 'PrisonRoomMap.txt', ''],
     'PrisonHallMap.txt': ['PrisonCorridorMap.txt', 'endofpart1'],
     'AroundPrison.txt': [],
     'AfterPrison.txt': []
+}
+names = {
+    'l': ['Ты не так умён как он'],
+    'л': ['Ты не так умён как он'],
+    'пикачу': ['Пика-пика!'],
+    'pikachu': ['Пика-пика!'],
+    'дискорд': ['Бог хаоса уже есть в этой вселеной'],
+    'discord': ['Бог хаоса уже есть в этой вселеной'],
+    'сайтама': ['Ты не так силён как он'],
+    'saitama': ['Ты не так силён как он'],
+    'рем': ['Прости, но я люблю Эмилию'],
+    'rem': ['Прости, но я люблю Эмилию'],
+    'темми': ['пРИВ!'],
+    'temmie': ['пРИВ!'],
+    'эсканор': ['Тот, кто стоит над всеми народами,',
+                'один из семи смертных грехов - грех гордыни', 'Великий львиный грех - Эсканор'],
+    'escanor': ['Тот, кто стоит над всеми народами,',
+                ' один из семи смертных грехов - грех гордыни', 'Великий львиный грех - Эсканор'],
+    'din': ['* Как ты посмел ко мне обратиться?!'],
+    'дин': ['* Как ты посмел ко мне обратиться?!'],
 }
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
@@ -744,6 +796,7 @@ player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorrid
 can = '.@,#*`'
 talk = True
 t = True
+# Загружаем звуки в игре
 prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
 scene1_theme = pygame.mixer.Sound(file='data/scene1.wav')
 fon_theme = pygame.mixer.Sound(file='data/FonSound.wav')
@@ -751,6 +804,7 @@ after_theme = pygame.mixer.Sound(file='data/afterfall_theme.wav')
 prison_theme.set_volume(0.2)
 scene1_theme.set_volume(0.2)
 after_theme.set_volume(0.2)
+# Стартовое окно игры
 NAME = start_screen()
 screen.fill((0, 0, 0))
 tiles_group.draw(screen)
@@ -758,11 +812,13 @@ door_group.draw(screen)
 use_group.draw(screen)
 player_group.draw(screen)
 prison_theme.play(loops=-1)
+# Основной цикл игры
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
         if event.type == pygame.KEYDOWN:
+            # Движение игрока
             if event.key == pygame.K_LEFT and not talk:
                 player.image = player.imagel
                 if player.pos_x > 0 and cur_level[player.pos_y][player.pos_x - 1] in can:
@@ -792,9 +848,11 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 terminate()
             if event.key == 13:
+                # Пропуски диалога
                 if talk:
                     talk = not talk
                     screen.fill((0, 0, 0))
+                # Проверка всех дверей и предметов на взаимодействие
                 elif player.image == player.imageb:
                     for i in door:
                         if i.x == player.pos_x and i.y == player.pos_y - 1:
@@ -839,6 +897,7 @@ while True:
         dialog([NAME + ' значит...'])
         t = False
     elif not talk:
+        # Рисуем спрайты
         player_group.update()
         tiles_group.draw(screen)
         door_group.draw(screen)
