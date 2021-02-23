@@ -73,6 +73,17 @@ class Use(pygame.sprite.Sprite):
         self.y = pos_y
         # Записываем сообщение, которое предмет выведет на экран при взаимодейтвии
         self.text = text
+        self.phrase = -1
+
+    def return_text(self, next=False):
+        if self.phrase < len(self.text) - 1 and next:
+            if self.text[0][0] == '          Вульферн':
+                for w in useful:
+                    if w.text[0][0] == '          Вульферн':
+                        w.phrase += 1
+            else:
+                self.phrase += 1
+        return self.text[self.phrase]
 
 
 # Класс изображения для атаки во время битвы
@@ -190,8 +201,9 @@ def generate_level(level, *aa):
             elif level[y][x] == '7':
                 Tile('frontwall', x, y)
                 use.append(Use('mirror', x, y,
-                               ['Ты посмотрел на отражение в зеркале...',
-                                'Отражение посмотрело на тебя...', 'Неловко...']))
+                               [['Ты посмотрел на отражение в зеркале...',
+                                'Отражение посмотрело на тебя...', 'Неловко...'], ['Это просто зеркало'],
+                                ['memory1'], ['Это просто зеркало']]))
             elif level[y][x] == '@':
                 Tile(under, x, y)
                 new_player = Player(x, y)
@@ -201,18 +213,26 @@ def generate_level(level, *aa):
                 ii += 1
             elif level[y][x] == '=':
                 Tile('empty', x, y)
-                use.append(Use('bed', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
+                use.append(Use('bed', x, y, [['Хотя вы и устали, спать на этом совсем не хочется']]))
             elif level[y][x] == '-':
-                use.append(Use('white', x, y, ['Хотя вы и устали, спать на этом совсем не хочется']))
+                use.append(Use('white', x, y, [['Хотя вы и устали, спать на этом совсем не хочется']]))
             elif level[y][x] == 's':
                 Tile('empty', x, y)
-                use.append(Use('prisoner1', x, y, ['* И что ты смотришь?']))
+                use.append(Use('prisoner1', x, y,
+                               [['          Вульферн', 'И что ты смотришь?', 'Смешно, да?'],
+                                ['          Вульферн', 'Этот офицер Дин...', 'Надо его проучить...',
+                                 'Не хочешь помочь мне?'],
+                                ['          Вульферн', 'Нет? Ну и хорошо.', 'Ты главное не сдавай меня.'],
+                                ['          Вульферн', 'Проходи. Они могут догадаться о моей задумке!']]))
             elif level[y][x] == 'd':
                 Tile('empty', x, y)
-                use.append(Use('prisondin', x, y, ['* Не подходи ко мне приступное отребье']))
+                use.append(Use('prisondin', x, y, [['         Офицер Дин', 'Не подходи ко мне приступное отребье!',
+                                                                           'Или хочешь чтобы я и тебе навалял?']]))
             elif level[y][x] == 'a':
                 Tile('empty', x, y)
-                use.append(Use('prisoner2', x, y, ['* Надзиратель Дин как всегда не в духе...']))
+                use.append(Use('prisoner2', x, y, [['         Маркус', 'Надзиратель Дин как всегда не в духе...'],
+                                                   ['         Маркус', 'Ты такое пропустил!'],
+                                                   ['         Маркус', 'Бедный Вульф...']]))
             elif level[y][x] == '#':
                 Tile('road', x, y)
             elif level[y][x] == '*':
@@ -224,29 +244,34 @@ def generate_level(level, *aa):
                 Tile('rock', x, y)
             elif level[y][x] == 'C':
                 Tile('roadmid', x, y)
-                use.append(Use('car', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
+                use.append(Use('car', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']]))
             elif level[y][x] == '_':
                 Tile('road', x, y)
-                use.append(Use('white', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
+                use.append(Use('white', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']]))
             elif level[y][x] == '~':
                 Tile('roadmid', x, y)
-                use.append(Use('white', x, y, ['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']))
+                use.append(Use('white', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']]))
             elif level[y][x] == '`':
                 Tile('afterground', x, y)
             elif level[y][x] == '%':
                 Tile('afterwall', x, y)
             elif level[y][x] == 'D':
                 Tile('afterground', x, y)
-                use.append(Use('afterdin', x, y, ['П-Помоги мне!']))
+                use.append(Use('afterdin', x, y, [['         ???', 'П-Помоги мне!', 'Он собирается меня убить!']]))
             elif level[y][x] == 'S':
                 Tile('afterground', x, y)
-                use.append(Use('enemy', x, y, ['fight']))
+                use.append(Use('enemy', x, y, [['fight']]))
             elif level[y][x] == ':':
                 Tile('empty', x, y)
-                use.append(Use('white', x, y, ['* И что ты смотришь?']))
+                use.append(Use('white', x, y,
+                               [['          Вульферн', 'И что ты смотришь?', 'Смешно, да?'],
+                                ['          Вульферн', 'Этот офицер Дин...', 'Надо его проучить...',
+                                 'Не хочешь помочь мне?'],
+                                ['          Вульферн', 'Нет? Ну и хорошо.', 'Ты главное не сдавай меня.'],
+                                ['          Вульферн', 'Проходи. Они могут догадаться о моей задумке!!']]))
             elif level[y][x] == '!':
                 Tile('afterground', x, y)
-                use.append(Use('white', x, y, ['fight']))
+                use.append(Use('white', x, y, [['fight']]))
     # вернем игрока, размер поля в клеткахб двери и интерактивные объекты на уровне
     return new_player, x, y, doorss, use
 
@@ -286,6 +311,8 @@ def new_level(lv):
 
 # Функция диалогового окна
 def dialog(text):
+    if text == ['memory1']:
+        text = ['Это просто зеркало']
     # Глобальная переменная показывающая находится ли игрок в диалоге
     global talk
     talk = True
@@ -397,30 +424,36 @@ def part2():
     screen.fill((0, 0, 0))
     tim = 0
     font = pygame.font.Font(None, tile_height)
+    scene2_theme.play()
+    sh = True
     while ww:
         for w in pygame.event.get():
             if w.type == pygame.QUIT:
                 terminate()
             if w.type == pygame.KEYDOWN:
                 if w.key == 13:
-                    if tim < 15:
-                        tim = 15
+                    if tim < 18:
+                        tim = 18
+                        scene2_theme.stop()
                     else:
                         ww = False
                 if w.key == pygame.K_ESCAPE:
                     terminate()
-        if tim < 3:
+        if tim < 4.5:
             fon = pygame.transform.scale(load_image('1.png'), (WIDTH, HEIGHT))
-        elif tim < 6:
-            fon = pygame.transform.scale(load_image('2.png'), (WIDTH, HEIGHT))
         elif tim < 9:
+            fon = pygame.transform.scale(load_image('2.png'), (WIDTH, HEIGHT))
+        elif tim < 10:
             fon = pygame.transform.scale(load_image('3.png'), (WIDTH, HEIGHT))
-        elif tim < 12:
+        elif tim < 16.5:
             fon = pygame.transform.scale(load_image('4.png'), (WIDTH, HEIGHT))
         else:
             fon = pygame.transform.scale(load_image('Logo.png'), (WIDTH, HEIGHT))
         screen.blit(fon, (0, 0))
-        if tim > 15:
+        if tim > 30 and sh:
+            fon_theme.play(loops=-1)
+            sh = False
+        if tim > 18:
             if int(tim) % 2 == 0:
                 string_rendered = font.render('[Нажмите Enter]', True, pygame.Color('white'))
             else:
@@ -432,6 +465,8 @@ def part2():
         tim += clock.tick() / 1000
         pygame.display.flip()
     # Запускаем новую локацию
+    scene2_theme.stop()
+    fon_theme.stop()
     after_theme.play(loops=-1)
     new_level('AroundPrison.txt')
 
@@ -560,6 +595,7 @@ def attack():
     for _ in range(random.choice([3, 4])):
         a.append(Pow(pow_group))
     run = True
+    clock.tick()
     while run:
         screen.fill((0, 0, 0))
         for event in pygame.event.get():
@@ -710,6 +746,39 @@ def end():
                     terminate()
 
 
+def memory():
+    z = True
+    tim = 0
+    clock.tick()
+    prison_theme.stop()
+    while z:
+        for r in pygame.event.get():
+            if r.type == pygame.QUIT:
+                terminate()
+            elif r.type == pygame.KEYDOWN:
+                if r.key == pygame.K_ESCAPE:
+                    terminate()
+                if r.key == 13:
+                    z = False
+        if tim < 3:
+            fon = pygame.transform.scale(load_image('6.jpg'), (WIDTH, HEIGHT))
+            screen.blit(fon, (0, 0))
+        elif tim < 6:
+            screen.fill((0, 0, 0))
+        elif tim < 9:
+            fon = pygame.transform.scale(load_image('тру.png'), (WIDTH, HEIGHT))
+            screen.blit(fon, (0, 0))
+        elif tim < 12:
+            fon = pygame.transform.scale(load_image('трудва.png'), (WIDTH, HEIGHT))
+            screen.blit(fon, (0, 0))
+        else:
+            z = False
+        tim += clock.tick() / 1000
+        pygame.display.flip()
+    screen.fill((0, 0, 0))
+    prison_theme.play(loops=-1)
+
+
 # Выбор разрешения экрана игры
 print('Выберите разрешение (цифру): 1)1280х720  2)1920х1080  3)2560х1440')
 a = input()
@@ -763,6 +832,7 @@ doors = {
     'AroundPrison.txt': [],
     'AfterPrison.txt': []
 }
+# Словарь особых имён
 names = {
     'l': ['Ты не так умён как он'],
     'л': ['Ты не так умён как он'],
@@ -801,9 +871,11 @@ prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
 scene1_theme = pygame.mixer.Sound(file='data/scene1.wav')
 fon_theme = pygame.mixer.Sound(file='data/FonSound.wav')
 after_theme = pygame.mixer.Sound(file='data/afterfall_theme.wav')
+scene2_theme = pygame.mixer.Sound(file='data/scene2.wav')
 prison_theme.set_volume(0.2)
 scene1_theme.set_volume(0.2)
 after_theme.set_volume(0.2)
+scene2_theme.set_volume(0.2)
 # Стартовое окно игры
 NAME = start_screen()
 screen.fill((0, 0, 0))
@@ -859,40 +931,52 @@ while True:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x and y.y == player.pos_y - 1:
-                            if y.text == ['fight']:
+                            if y.return_text() == ['fight']:
                                 fight1()
+                            elif y.return_text() == ['memory1']:
+                                memory()
+                                y.return_text(next=True)
                             else:
-                                dialog(y.text)
+                                dialog(y.return_text(next=True))
                 elif player.image == player.imagef:
                     for i in door:
                         if i.x == player.pos_x and i.y == player.pos_y + 1:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x and y.y == player.pos_y + 1:
-                            if y.text == ['fight']:
+                            if y.return_text() == ['fight']:
                                 fight1()
+                            elif y.return_text() == ['memory1']:
+                                memory()
+                                y.return_text(next=True)
                             else:
-                                dialog(y.text)
+                                dialog(y.return_text(next=True))
                 elif player.image == player.imagel:
                     for i in door:
                         if i.x == player.pos_x - 1 and i.y == player.pos_y:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x - 1 and y.y == player.pos_y:
-                            if y.text == ['fight']:
+                            if y.return_text() == ['fight']:
                                 fight1()
+                            elif y.return_text() == ['memory1']:
+                                memory()
+                                y.return_text(next=True)
                             else:
-                                dialog(y.text)
+                                dialog(y.return_text(next=True))
                 elif player.image == player.imager:
                     for i in door:
                         if i.x == player.pos_x + 1 and i.y == player.pos_y:
                             new_level(i.place)
                     for y in useful:
                         if y.x == player.pos_x + 1 and y.y == player.pos_y:
-                            if y.text == ['fight']:
+                            if y.return_text() == ['fight']:
                                 fight1()
+                            elif y.return_text() == ['memory1']:
+                                memory()
+                                y.return_text(next=True)
                             else:
-                                dialog(y.text)
+                                dialog(y.return_text(next=True))
     if t:
         dialog([NAME + ' значит...'])
         t = False
