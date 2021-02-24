@@ -76,7 +76,7 @@ class Use(pygame.sprite.Sprite):
         self.phrase = -1
 
     def return_text(self, next=False):
-        global quest
+        global quest, sec2, sec3
         if self.phrase < len(self.text) - 1 and next:
             if self.text[0][0] == '          Вульферн':
                 for w in useful:
@@ -88,6 +88,12 @@ class Use(pygame.sprite.Sprite):
                         w.phrase += 1
             else:
                 self.phrase += 1
+        if self.text[0][0] == '          Охраник?':
+            sec2 = False
+            if self.text[self.phrase][1] == 'Можешь идти, разберись с тем, что там происходит':
+                sec3 = False
+        if self.phrase >= len(self.text) - 1:
+            self.phrase = len(self.text) - 1
         if self.image == tile_images['prisoner3']:
             if self.text[self.phrase][1] == 'Спасибо большое!':
                 doors['PrisonCorridorMap.txt'] = ['wolf', 'mark', 'PrisonHallMap.txt',
@@ -102,6 +108,7 @@ class Use(pygame.sprite.Sprite):
                                       'На упаковке от еды вы замечаете логотип...',
                                       'Он кажется вам очень знакомым']:
             quest = True
+            texts['PrisonHallMap.txt'][0] = 0
         return self.text[self.phrase]
 
 
@@ -263,13 +270,34 @@ def generate_level(level, *aa):
                 Tile('rock', x, y)
             elif level[y][x] == 'C':
                 Tile('roadmid', x, y)
-                use.append(Use('car', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']]))
+                use.append(Use('car', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...'],
+                                             ['Вы нашли переговорный пейджер в кабине водителя',
+                                              'Там остались последние сообщения'],
+                                             ['To: Мы почти приехали.', 'From: Хорошо.',
+                                              'From: Внимание! Зазвучала сирена ядерной тревоги!',
+                                              'To: Какая сирена? У нас всё чис...'],
+                                             ['Последнее сообщение не было отправленно...'],
+                                             ['Больше тут ничего нет.']]))
             elif level[y][x] == '_':
                 Tile('road', x, y)
-                use.append(Use('white', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']]))
+                use.append(Use('white', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...'],
+                                               ['Вы нашли переговорный пейджер в кабине водителя',
+                                                'Там остались последние сообщения'],
+                                               ['To: Мы почти приехали.', 'From: Хорошо.',
+                                                'From: Внимание! Зазвучала сирена ядерной тревоги!',
+                                                'To: Какая сирена? У нас всё чис...'],
+                                               ['Последнее сообщение не было отправленно...'],
+                                               ['Больше тут ничего нет.']]))
             elif level[y][x] == '~':
                 Tile('roadmid', x, y)
-                use.append(Use('white', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...']]))
+                use.append(Use('white', x, y, [['Вы проверили остался ли кто нибудь живой', 'Там никого нет...'],
+                                               ['Вы нашли переговорный пейджер в кабине водителя',
+                                                'Там остались последние сообщения'],
+                                               ['To: Мы почти приехали.', 'From: Хорошо.',
+                                                'From: Внимание! Зазвучала сирена ядерной тревоги!',
+                                                'To: Какая сирена? У нас всё чис...'],
+                                               ['Последнее сообщение не было отправленно...'],
+                                               ['Больше тут ничего нет.']]))
             elif level[y][x] == '`':
                 Tile('afterground', x, y)
             elif level[y][x] == '%':
@@ -323,6 +351,28 @@ def generate_level(level, *aa):
                                                 'Пара старых журналов и фотографий, а так же немного еды.',
                                                 'На упаковке от еды вы замечаете логотип...',
                                                 'Он кажется вам очень знакомым'], ['Койка Кевина']]))
+            elif level[y][x] == 'O':
+                Tile('empty', x, y)
+                use.append(Use('security', x, y, [['          Охраник?',
+                                                   'А ты чего тут делаешь? И ты вообще кто такой?',
+                                                   '...Не знаешь что произошло?', 'Да я и сам то не очень понимаю'],
+                                                  ['          Охраник?',
+                                                   'ЭТО случилось в самый обычный день.'
+                                                   ' Я пил чай и тут земля начала дрожать.',
+                                                   'Я уронил чашку и уже наклонился её поднимать, как потерял сознание',
+                                                   'А когда очнулся, был уже тут.'],
+                                                  ['          Охраник',
+                                                   'Заключенные устроили тут свою общину и я присоединился к ним.',
+                                                   'Офицеров я тут больше не видел...'],
+                                                  ['          Охраник',
+                                                   'Я вижу, ты хороший малый. Ты можешь остаться с нами если хочешь',
+                                                   'Кстати, я слышал шум из той "комнаты"',
+                                                   'можешь пожалуйста проверить, что они там устроили.'],
+                                                  ['          Охраник', 'Если тебе придётся драться, то помни:',
+                                                   'Бить противника нужно в слабые с помощью МЫШКИ.',
+                                                   'Так же противника можно уговорить престать сражаться.'],
+                                                  ['          Охраник',
+                                                   'Можешь идти, разберись с тем, что там происходит']]))
     # вернем игрока, размер поля в клеткахб двери и интерактивные объекты на уровне
     return new_player, x, y, doorss, use
 
@@ -357,6 +407,8 @@ def new_level(lv):
         cur_level = load_level(lv)
         # генерируем уровень
         player, level_x, level_y, door, useful = generate_level(cur_level, *doors[lv])
+        for www in range(len(useful)):
+            useful[www].phrase += texts[lv][www]
         # При переходе из определённой локации в другую, двигаем игрока к двери, из которой он вышел
         if lvl == 'PrisonCorridorMap.txt' and lv == 'PrisonRoomMap.txt':
             player.pos_x += 2
@@ -617,7 +669,6 @@ def fight1():
                         else:
                             b1 = 'Атака'
                             b2 = 'Действие'
-
                 if event.key == 304 and count != 4:
                     b1 = 'Атака'
                     b2 = 'Действие'
@@ -647,6 +698,25 @@ def fight1():
         if hp <= 0:
             game_over()
         screen.blit(image, (tile_width * 8, 0))
+        font1 = pygame.font.Font(None, int(0.625 * tile_width))
+        string_rendered = font1.render('HP', True, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.top = tile_height * 0.5
+        intro_rect.x = int(6.5 * tile_width)
+        screen.blit(string_rendered, intro_rect)
+        pygame.draw.rect(screen, pygame.color.Color('red'),
+                         ((int(12.5 * tile_width), tile_height), (tile_width * 2, tile_height // 5)))
+        pygame.draw.rect(screen, pygame.color.Color('green'),
+                         ((int(12.5 * tile_width), tile_height), (tile_width * 0.2 * enemyhp, tile_height // 5)))
+        string_rendered = font1.render('Enemy HP', True, pygame.Color('white'))
+        intro_rect = string_rendered.get_rect()
+        intro_rect.top = tile_height * 0.5
+        intro_rect.x = int(12.5 * tile_width)
+        screen.blit(string_rendered, intro_rect)
+        pygame.draw.rect(screen, pygame.color.Color('red'),
+                         ((int(6.5 * tile_width), tile_height), (tile_width * 2, tile_height // 5)))
+        pygame.draw.rect(screen, pygame.color.Color('green'),
+                         ((int(6.5 * tile_width), tile_height), (tile_width * 0.4 * hp, tile_height // 5)))
         pygame.display.flip()
 
 
@@ -669,7 +739,7 @@ def attack():
         pow_group.draw(screen)
         time += clock.tick() / 1000
         pygame.display.flip()
-        if time > 4:
+        if time > 2:
             run = False
     for i in a:
         if i.tap:
@@ -780,6 +850,8 @@ def enemy_attack():
 
 # Функция экрана конца игры если мы проиграли
 def game_over():
+    fight_theme.stop()
+    fon_theme.play(loops=-1)
     fon = pygame.transform.scale(load_image('end_screen.png'), (WIDTH, HEIGHT))
     screen.blit(fon, (0, 0))
     pygame.display.flip()
@@ -796,6 +868,8 @@ def game_over():
 
 # Функция экрана конца игры если мы прошли игру
 def end():
+    fight_theme.stop()
+    fon_theme.play(loops=-1)
     screen.fill((0, 0, 0))
     dialog(['Вы прошли ДЕМО-версию игры!', 'Спасибо за то, что играли)'])
     pygame.display.flip()
@@ -848,6 +922,7 @@ print('Выберите разрешение (цифру): 1)1280х720  2)1920х
 a = input()
 under = 'empty'
 pygame.init()
+pygame.display.set_caption('The Story DEMO')
 if a == '1':
     size = WIDTH, HEIGHT = 1280, 720
     tile_width = tile_height = 80
@@ -888,6 +963,7 @@ tile_images = {
                                                                            int(tile_height * 1.5))),
     'white': pygame.transform.scale(load_image('White.png', -1), (tile_width, tile_height)),
     'prisoner3': pygame.transform.scale(load_image('PrisonerFront4.png', -1), (tile_width, tile_height)),
+    'security': pygame.transform.scale(load_image('SecurityFront.png', -1), (tile_width, tile_height)),
 }
 # словарь дверей и куда они ведут
 doors = {
@@ -896,7 +972,8 @@ doors = {
     'PrisonHallMap.txt': ['PrisonCorridorMap.txt', 'closed'],
     'AroundPrison.txt': [],
     'AfterPrison.txt': [],
-    'PrisonRoomMap2.txt': ['PrisonCorridorMap.txt']
+    'PrisonRoomMap2.txt': ['PrisonCorridorMap.txt'],
+    'PrisonEnter.txt': []
 }
 # Словарь особых имён
 names = {
@@ -919,6 +996,16 @@ names = {
     'din': ['* Как ты посмел ко мне обратиться?!'],
     'дин': ['* Как ты посмел ко мне обратиться?!'],
 }
+# Словарь для диаологов
+texts = {
+    'PrisonRoomMap.txt': [0, 0, 0],
+    'PrisonCorridorMap.txt': [],
+    'PrisonHallMap.txt': [0, 0, 0, 0, 0, 0, 0],
+    'AroundPrison.txt': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    'AfterPrison.txt': [0, 0, 0, 0, 0],
+    'PrisonRoomMap2.txt': [0, 0, 0],
+    'PrisonEnter.txt': [0]
+}
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -933,7 +1020,9 @@ can = '.@,#*`'
 talk = True
 t = True
 quest = False
-exitt = False
+sec = True
+sec2 = True
+sec3 = True
 # Загружаем звуки в игре
 prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
 scene1_theme = pygame.mixer.Sound(file='data/scene1.wav')
@@ -972,10 +1061,17 @@ while True:
                         player.pos_x += 1
             if event.key == pygame.K_UP and not talk:
                 player.image = player.imageb
-                if player.pos_y == 0:
+                if player.pos_y == 0 and lvl == 'PrisonEnter.txt' and not sec2 and not sec3:
                     new_level('AroundPrison.txt')
                     player.pos_x += 2
                     player.pos_y += 2
+                elif player.pos_y == 0 and lvl == 'PrisonEnter.txt' and sec2:
+                    dialog(['          Охраник?', 'Ты куда пошёл?', 'Я те говорю сюда подойди.',
+                            'Не буду я стрелять, не боись'])
+                elif player.pos_y == 0 and lvl == 'PrisonEnter.txt' and sec3:
+                    dialog(['          Охраник?', 'Ты куда пошёл?', 'Мы ещё не договорили!'])
+                elif player.pos_y == 0 and lvl == 'AfterPrison.txt':
+                    dialog(['Мне нужно помочь!'])
                 elif cur_level[player.pos_y - 1][player.pos_x] in can:
                     if player.pos_y > 0:
                         player.pos_y -= 1
@@ -986,7 +1082,15 @@ while True:
                         if player.pos_y < level_y:
                             player.pos_y += 1
                 except IndexError:
-                    new_level('AfterPrison.txt')
+                    if lvl == 'AroundPrison.txt':
+                        new_level('PrisonEnter.txt')
+                    elif sec2:
+                        dialog(['          Охраник?', 'Ты куда пошёл?', 'Я те говорю сюда подойди.',
+                                'Не буду я стрелять, не боись'])
+                    elif sec3:
+                        dialog(['          Охраник?', 'Ты куда пошёл?', 'Мы ещё не договорили!'])
+                    else:
+                        new_level('AfterPrison.txt')
             if event.key == pygame.K_ESCAPE:
                 terminate()
             if event.key == 13:
@@ -999,54 +1103,118 @@ while True:
                     for i in door:
                         if i.x == player.pos_x and i.y == player.pos_y - 1:
                             new_level(i.place)
-                    for y in useful:
-                        if y.x == player.pos_x and y.y == player.pos_y - 1:
-                            if y.return_text() == ['fight']:
+                    for y in range(len(useful)):
+                        if useful[y].x == player.pos_x and useful[y].y == player.pos_y - 1:
+                            if useful[y].return_text() == ['fight']:
                                 fight1()
-                            elif y.return_text() == ['memory1']:
+                            elif useful[y].return_text() == ['memory1']:
                                 memory()
-                                y.return_text(next=True)
+                                useful[y].return_text(next=True)
                             else:
-                                dialog(y.return_text(next=True))
+                                dialog(useful[y].return_text(next=True))
+                            if lvl == 'PrisonRoomMap.txt' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonRoomMap2' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonHallMap.txt' and y > 2:
+                                texts[lvl][-1] += 1
+                                texts[lvl][-2] += 1
+                                texts[lvl][-3] += 1
+                                texts[lvl][-4] += 1
+                            elif lvl == 'AroundPrison.txt':
+                                for wwww in range(len(texts[lvl])):
+                                    texts[lvl][wwww] += 1
+                            else:
+                                texts[lvl][y] += 1
                 elif player.image == player.imagef:
                     for i in door:
                         if i.x == player.pos_x and i.y == player.pos_y + 1:
                             new_level(i.place)
-                    for y in useful:
-                        if y.x == player.pos_x and y.y == player.pos_y + 1:
-                            if y.return_text() == ['fight']:
+                    for y in range(len(useful)):
+                        if useful[y].x == player.pos_x and useful[y].y == player.pos_y + 1:
+                            if useful[y].return_text() == ['fight']:
                                 fight1()
-                            elif y.return_text() == ['memory1']:
+                            elif useful[y].return_text() == ['memory1']:
                                 memory()
-                                y.return_text(next=True)
+                                useful[y].return_text(next=True)
                             else:
-                                dialog(y.return_text(next=True))
+                                dialog(useful[y].return_text(next=True))
+                            if lvl == 'PrisonRoomMap.txt' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonRoomMap2' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonHallMap.txt' and y > 2:
+                                texts[lvl][-1] += 1
+                                texts[lvl][-2] += 1
+                                texts[lvl][-3] += 1
+                                texts[lvl][-4] += 1
+                            elif lvl == 'AroundPrison.txt':
+                                for wwww in range(len(texts[lvl])):
+                                    texts[lvl][wwww] += 1
+                            else:
+                                texts[lvl][y] += 1
                 elif player.image == player.imagel:
                     for i in door:
                         if i.x == player.pos_x - 1 and i.y == player.pos_y:
                             new_level(i.place)
-                    for y in useful:
-                        if y.x == player.pos_x - 1 and y.y == player.pos_y:
-                            if y.return_text() == ['fight']:
+                    for y in range(len(useful)):
+                        if useful[y].x == player.pos_x - 1 and useful[y].y == player.pos_y:
+                            if useful[y].return_text() == ['fight']:
                                 fight1()
-                            elif y.return_text() == ['memory1']:
+                            elif useful[y].return_text() == ['memory1']:
                                 memory()
-                                y.return_text(next=True)
+                                useful[y].return_text(next=True)
                             else:
-                                dialog(y.return_text(next=True))
+                                dialog(useful[y].return_text(next=True))
+                            if lvl == 'PrisonRoomMap.txt' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonRoomMap2' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonHallMap.txt' and y > 2:
+                                texts[lvl][-1] += 1
+                                texts[lvl][-2] += 1
+                                texts[lvl][-3] += 1
+                                texts[lvl][-4] += 1
+                            elif lvl == 'AroundPrison.txt':
+                                for wwww in range(len(texts[lvl])):
+                                    texts[lvl][wwww] += 1
+                            else:
+                                texts[lvl][y] += 1
                 elif player.image == player.imager:
                     for i in door:
                         if i.x == player.pos_x + 1 and i.y == player.pos_y:
                             new_level(i.place)
-                    for y in useful:
-                        if y.x == player.pos_x + 1 and y.y == player.pos_y:
-                            if y.return_text() == ['fight']:
+                    for y in range(len(useful)):
+                        if useful[y].x == player.pos_x + 1 and useful[y].y == player.pos_y:
+                            if useful[y].return_text() == ['fight']:
                                 fight1()
-                            elif y.return_text() == ['memory1']:
+                            elif useful[y].return_text() == ['memory1']:
                                 memory()
-                                y.return_text(next=True)
+                                useful[y].return_text(next=True)
                             else:
-                                dialog(y.return_text(next=True))
+                                dialog(useful[y].return_text(next=True))
+                            if lvl == 'PrisonRoomMap.txt' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonRoomMap2' and y >= 1:
+                                texts[lvl][1] += 1
+                                texts[lvl][2] += 1
+                            elif lvl == 'PrisonHallMap.txt' and y > 2:
+                                texts[lvl][-1] += 1
+                                texts[lvl][-2] += 1
+                                texts[lvl][-3] += 1
+                                texts[lvl][-4] += 1
+                            elif lvl == 'AroundPrison.txt':
+                                for wwww in range(len(texts[lvl])):
+                                    texts[lvl][wwww] += 1
+                            else:
+                                texts[lvl][y] += 1
     if t:
         dialog([NAME + ' значит...'])
         t = False
@@ -1060,5 +1228,9 @@ while True:
     if lvl == 'AfterPrison.txt' and t is False:
         dialog(['* П-Помогите!', ' Он хочет убить меня!'])
         t = None
+    if sec and lvl == 'PrisonEnter.txt':
+        dialog(['          Охраник?', 'Э, кто стрелять ид... Тфу... Кто идёт, стрелять буду!',
+                'Ты хто такой?', 'Пади сюда, разберёмся сейчас.'])
+        sec = False
     pygame.display.flip()
     clock.tick(FPS)
