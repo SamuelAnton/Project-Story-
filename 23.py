@@ -76,13 +76,32 @@ class Use(pygame.sprite.Sprite):
         self.phrase = -1
 
     def return_text(self, next=False):
+        global quest
         if self.phrase < len(self.text) - 1 and next:
             if self.text[0][0] == '          Вульферн':
                 for w in useful:
                     if w.text[0][0] == '          Вульферн':
                         w.phrase += 1
+            elif self.text[0][0] == 'Под кроватью вы нашли мешок с вещами:':
+                for w in useful:
+                    if w.text[0][0] == 'Под кроватью вы нашли мешок с вещами:':
+                        w.phrase += 1
             else:
                 self.phrase += 1
+        if self.image == tile_images['prisoner3']:
+            if self.text[self.phrase][1] == 'Спасибо большое!':
+                doors['PrisonCorridorMap.txt'] = ['wolf', 'mark', 'PrisonHallMap.txt',
+                                                  'PrisonRoomMap.txt', 'PrisonRoomMap2.txt']
+            if quest:
+                doors['PrisonHallMap.txt'] = ['PrisonCorridorMap.txt', 'endofpart1']
+                for ww in door:
+                    if ww.place == 'closed':
+                        ww.place = 'endofpart1'
+        if self.text[self.phrase] == ['Под кроватью вы нашли мешок с вещами:',
+                                      'Пара старых журналов и фотографий, а так же немного еды.',
+                                      'На упаковке от еды вы замечаете логотип...',
+                                      'Он кажется вам очень знакомым']:
+            quest = True
         return self.text[self.phrase]
 
 
@@ -272,6 +291,38 @@ def generate_level(level, *aa):
             elif level[y][x] == '!':
                 Tile('afterground', x, y)
                 use.append(Use('white', x, y, [['fight']]))
+            elif level[y][x] == 'k' and not quest:
+                Tile('empty', x, y)
+                use.append(Use('prisoner3', x, y, [['          Кевин',
+                                                    'Хей, братюнь, не мог бы ты немного помочь мне пожалуйста?'],
+                                                   ['          Кевин',
+                                                    'Я не могу отходить от офицера, а мы скоро уедем...',
+                                                    'А я забыл свои вещи в камере!',
+                                                    'Можешь пожалуйста принести их мне?'],
+                                                   ['          Кевин', 'Спасибо большое!',
+                                                    'Моя камера находится сразу слева от входа в коридор.'],
+                                                   ['          Кевин',
+                                                    'Моя камера находится сразу слева от входа в коридор.']]))
+            elif level[y][x] == 'k' and quest:
+                Tile('empty', x, y)
+                use.append(Use('prisoner3', x, y, [['          Кевин', 'Спасибо тебе большое!',
+                                                    'В качестве благодарности прими эту шоколадку!',
+                                                    '* Вы получили шоколад!'], ['          Кевин',
+                                                                                'Спасибо большо ещё раз!']]))
+            elif level[y][x] == '8':
+                Tile('frontwall', x, y)
+                use.append(Use('mirror', x, y, [['Это просто зеркало...', 'Хотя оно какое-то грязное...']]))
+            elif level[y][x] == '9':
+                Tile('empty', x, y)
+                use.append(Use('bed', x, y, [['Под кроватью вы нашли мешок с вещами:',
+                                              'Пара старых журналов и фотографий, а так же немного еды.',
+                                              'На упаковке от еды вы замечаете логотип...',
+                                              'Он кажется вам очень знакомым'], ['Койка Кевина']]))
+            elif level[y][x] == '0':
+                use.append(Use('white', x, y, [['Под кроватью вы нашли мешок с вещами:',
+                                                'Пара старых журналов и фотографий, а так же немного еды.',
+                                                'На упаковке от еды вы замечаете логотип...',
+                                                'Он кажется вам очень знакомым'], ['Койка Кевина']]))
     # вернем игрока, размер поля в клеткахб двери и интерактивные объекты на уровне
     return new_player, x, y, doorss, use
 
@@ -283,6 +334,15 @@ def new_level(lv):
     if lv == 'endofpart1':
         if lvl == 'PrisonHallMap.txt':
             part2()
+    elif lv == 'wolf':
+        dialog(['Это комната Вольферна'])
+    elif lv == 'mark':
+        dialog(['Это комната Маркуса'])
+    elif lv == 'kewin':
+        dialog(['Это комната Кевина'])
+    elif lv == 'closed':
+        if lvl == 'PrisonHallMap.txt':
+            dialog(['         Офицер Дин', 'Мы уже скоро поедем, не торопи события!'])
     elif lv != '':
         # Закрашиваем поле и опусташаем группы спрайтов
         screen.fill((0, 0, 0))
@@ -303,6 +363,8 @@ def new_level(lv):
         elif lvl == 'PrisonHallMap.txt' and lv == 'PrisonCorridorMap.txt':
             player.pos_x += 7
             player.pos_y -= 1
+        elif lvl == 'PrisonRoomMap2.txt' and lv == 'PrisonCorridorMap.txt':
+            player.pos_x += 6
         # прорисовываем уровень
         all_sprites.draw(screen)
         door_group.draw(screen)
@@ -473,6 +535,8 @@ def part2():
 
 # Функция боя с врагом
 def fight1():
+    after_theme.stop()
+    fight_theme.play(loops=-1)
     btns = [pygame.color.Color('green'), (255, 255, 255)]
     font = pygame.font.Font(None, int(tile_height * 1.5))
     b1 = 'Атака'
@@ -822,15 +886,17 @@ tile_images = {
     'afterdin': pygame.transform.scale(load_image('DinPrisonerFront.png', -1), (tile_width, tile_height)),
     'enemy': pygame.transform.scale(load_image('PrisonerFront3.png', -1), (int(tile_width * 1.5),
                                                                            int(tile_height * 1.5))),
-    'white': pygame.transform.scale(load_image('White.png', -1), (tile_width, tile_height))
+    'white': pygame.transform.scale(load_image('White.png', -1), (tile_width, tile_height)),
+    'prisoner3': pygame.transform.scale(load_image('PrisonerFront4.png', -1), (tile_width, tile_height)),
 }
 # словарь дверей и куда они ведут
 doors = {
     'PrisonRoomMap.txt': ['PrisonCorridorMap.txt'],
-    'PrisonCorridorMap.txt': ['', '', 'PrisonHallMap.txt', 'PrisonRoomMap.txt', ''],
-    'PrisonHallMap.txt': ['PrisonCorridorMap.txt', 'endofpart1'],
+    'PrisonCorridorMap.txt': ['wolf', 'mark', 'PrisonHallMap.txt', 'PrisonRoomMap.txt', 'kewin'],
+    'PrisonHallMap.txt': ['PrisonCorridorMap.txt', 'closed'],
     'AroundPrison.txt': [],
-    'AfterPrison.txt': []
+    'AfterPrison.txt': [],
+    'PrisonRoomMap2.txt': ['PrisonCorridorMap.txt']
 }
 # Словарь особых имён
 names = {
@@ -866,16 +932,20 @@ player, level_x, level_y, door, useful = generate_level(cur_level, 'PrisonCorrid
 can = '.@,#*`'
 talk = True
 t = True
+quest = False
+exitt = False
 # Загружаем звуки в игре
 prison_theme = pygame.mixer.Sound(file='data/prison_theme.wav')
 scene1_theme = pygame.mixer.Sound(file='data/scene1.wav')
 fon_theme = pygame.mixer.Sound(file='data/FonSound.wav')
 after_theme = pygame.mixer.Sound(file='data/afterfall_theme.wav')
 scene2_theme = pygame.mixer.Sound(file='data/scene2.wav')
+fight_theme = pygame.mixer.Sound(file='data/fight_theme.wav')
 prison_theme.set_volume(0.2)
 scene1_theme.set_volume(0.2)
 after_theme.set_volume(0.2)
 scene2_theme.set_volume(0.2)
+fight_theme.set_volume(0.2)
 # Стартовое окно игры
 NAME = start_screen()
 screen.fill((0, 0, 0))
