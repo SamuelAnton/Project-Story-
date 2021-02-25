@@ -90,7 +90,7 @@ class Use(pygame.sprite.Sprite):
                 self.phrase += 1
         if self.text[0][0] == '          Охраник?':
             sec2 = False
-            if self.text[self.phrase][1] == 'Можешь идти, разберись с тем, что там происходит':
+            if self.phrase == 5:
                 sec3 = False
         if self.phrase >= len(self.text) - 1:
             self.phrase = len(self.text) - 1
